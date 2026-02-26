@@ -349,3 +349,10 @@ body {
 .btn-success:hover {
     background-color: #218838;
 }
+
+.form-group select {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #dcdcdc;
+    font-size: 14px;
+}

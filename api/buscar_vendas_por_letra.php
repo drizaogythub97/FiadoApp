@@ -1,8 +1,16 @@
 <?php
-header('Content-Type: application/json');
-
+session_start();
 require_once __DIR__ . '/../config/conexao.php';
 
+header('Content-Type: application/json');
+
+if (!isset($_SESSION['usuario_id'])) {
+    http_response_code(401);
+    echo json_encode([]);
+    exit;
+}
+
+$usuario_id = $_SESSION['usuario_id'];
 $letra = $_GET['letra'] ?? '';
 
 if (!$letra) {
@@ -13,17 +21,22 @@ if (!$letra) {
 try {
 
     $sql = "
-        SELECT v.id, c.nome, v.valor_total
+        SELECT 
+            v.id,
+            c.nome,
+            v.valor_total,
+            v.status
         FROM vendas v
         INNER JOIN clientes c ON v.cliente_id = c.id
         WHERE c.nome LIKE :letra
-        AND v.status = 'ATIVA'
+        AND v.usuario_id = :usuario_id
         ORDER BY c.nome ASC
     ";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        ':letra' => $letra . '%'
+        ':letra' => $letra . '%',
+        ':usuario_id' => $usuario_id
     ]);
 
     $vendas = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -31,8 +44,7 @@ try {
     echo json_encode($vendas);
 
 } catch (Exception $e) {
+
     http_response_code(500);
-    echo json_encode([
-        'erro' => $e->getMessage()
-    ]);
+    echo json_encode([]);
 }

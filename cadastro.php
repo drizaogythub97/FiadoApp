@@ -77,7 +77,7 @@
         </div>
 
         <div class="right-actions">
-            <a href="index.php" class="btn-secondary" style="text-decoration:none;">
+            <a href="dashboard.php" class="btn-secondary" style="text-decoration:none;">
                 Voltar
             </a>
         </div>
