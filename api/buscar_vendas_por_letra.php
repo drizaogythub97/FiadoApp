@@ -24,6 +24,7 @@ try {
         SELECT 
             v.id,
             c.nome,
+            c.referencia,
             v.valor_total,
             v.status
         FROM vendas v
@@ -31,7 +32,7 @@ try {
         WHERE c.nome LIKE :letra
         AND v.usuario_id = :usuario_id
         ORDER BY c.nome ASC
-    ";
+        ";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute([

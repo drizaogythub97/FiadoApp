@@ -66,5 +66,8 @@ if(!isset($_SESSION['usuario_id'])){
     FiadoApp - Todos os direitos reservados para Adriano Cardoso.
 </footer>
 
+
+<script src="assets/js/toast.js"></script>
+<div id="toast-container"></div>
 </body>
 </html>

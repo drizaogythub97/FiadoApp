@@ -45,6 +45,7 @@ $itens = $itens->fetchAll(PDO::FETCH_ASSOC);
 <h2><?= htmlspecialchars($venda['nome']) ?></h2>
 
 <div style="margin-top:10px; line-height:1.6;">
+    <p><strong>Referência:</strong> <?= htmlspecialchars($venda['referencia']) ?></p>
     <p><strong>Telefone:</strong> <?= htmlspecialchars($venda['telefone']) ?></p>
     <p><strong>Data da Compra:</strong> <?= date('d/m/Y', strtotime($venda['data_compra'])) ?></p>
     <p><strong>Data de Vencimento:</strong> <?= date('d/m/Y', strtotime($venda['data_vencimento'])) ?></p>
@@ -136,6 +137,9 @@ async function marcarComoPaga(id){
     }
 }
 </script>
+<script src="assets/js/toast.js"></script>
+
+<div id="toast-container"></div>
 
 </body>
 </html>

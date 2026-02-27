@@ -36,6 +36,9 @@ async function carregarVendas(letra) {
         card.innerHTML = `
             <div class="venda-info">
                 <strong>${venda.nome}</strong>
+                <span style="font-size:13px; color:#666;">
+                    Referência: ${venda.referencia ? venda.referencia : '—'}
+                </span>
                 <span>Valor: R$ ${parseFloat(venda.valor_total).toFixed(2)}</span>
             </div>
             <div style="display:flex; gap:10px;">
@@ -71,9 +74,21 @@ async function marcarComoPaga(id){
     const resultado = await response.json();
 
     if(resultado.status === "sucesso"){
-        window.open(resultado.pdf_url, "_blank");
-        location.reload();
+
+        showToast("Venda marcada como paga! Comprovante gerado.");
+
+        const link = document.createElement("a");
+        link.href = resultado.pdf_url;
+        link.download = "";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+
     } else {
-        alert("Erro ao marcar como paga.");
+        showToast("Erro ao marcar como paga.", "error");
     }
 }

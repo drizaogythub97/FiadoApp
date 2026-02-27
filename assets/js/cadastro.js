@@ -78,6 +78,11 @@ async function salvarVenda() {
     document.getElementById("mensagem").innerText = resultado.mensagem;
 
     if(resultado.status === "sucesso"){
-        location.reload();
+        showToast("Venda cadastrada com sucesso!");
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    } else {
+        showToast(resultado.mensagem || "Erro ao cadastrar venda.", "error");
     }
 }

@@ -115,6 +115,9 @@ tipoSelect.addEventListener("change", function(){
     }
 });
 </script>
+<script src="assets/js/toast.js"></script>
+<script src="assets/js/cadastro.js"></script>
+<div id="toast-container"></div>
 
 </body>
 </html>
