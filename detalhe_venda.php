@@ -137,7 +137,7 @@ async function marcarComoPaga(id){
     }
 }
 </script>
-<script src="assets/js/toast.js"></script>
+<script src="/assets/js/toast.js"></script>
 
 <div id="toast-container"></div>
 

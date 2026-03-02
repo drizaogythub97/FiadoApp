@@ -94,8 +94,8 @@
     FiadoApp - Todos os direitos reservados para Adriano Cardoso.
 </footer>
 
-<script src="assets/js/toast.js"></script>
-<script src="assets/js/cadastro.js"></script>
+<script src="/assets/js/toast.js"></script>
+<script src="/assets/js/cadastro.js"></script>
 <div id="toast-container"></div>
 
 </body>
