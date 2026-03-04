@@ -1,11 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/conexao.php';
-
-if (!isset($_SESSION['usuario_id'])) {
-    header("Location: login.php");
-    exit;
-}
 
 $usuario_id = $_SESSION['usuario_id'];
 $cliente_id = $_GET['id'] ?? 0;

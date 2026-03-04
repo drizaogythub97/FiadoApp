@@ -1,5 +1,6 @@
 <?php
-require_once "../config/conexao.php";
+require_once __DIR__ . '/../config/auth.php';
+require_once __DIR__ . '/../config/conexao.php';
 require_once "../vendor/fpdf/fpdf.php";
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;

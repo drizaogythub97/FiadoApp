@@ -62,9 +62,9 @@ async function carregarClientes(letra) {
 }
 
 function detalharCliente(id){
-    window.location.href = `cliente_detalhe.php?id=${id}`;
+    window.location.href = `cliente_detalhe.php?id=${clienteid}`;
 }
 
 function historicoCliente(id){
-    window.location.href = `cliente_historico.php?id=${id}`;
+    window.location.href = `cliente_historico.php?id=${cliente.id}`;
 }
