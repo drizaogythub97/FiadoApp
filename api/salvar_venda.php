@@ -17,7 +17,6 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
 
 $usuario_id = $_SESSION['usuario_id'];
 
-// Aceita JSON
 $input = json_decode(file_get_contents("php://input"), true);
 if ($input) {
     $_POST = $input;
@@ -27,47 +26,91 @@ try {
 
     $pdo->beginTransaction();
 
-    // ===== DADOS CLIENTE =====
+    $cliente_id = $_POST["cliente_id"] ?? null;
     $nome = trim($_POST["nome"] ?? '');
+    $sobrenome = trim($_POST["sobrenome"] ?? '');
     $referencia = trim($_POST["referencia"] ?? '');
     $telefone = trim($_POST["telefone"] ?? '');
     $data_compra = $_POST["data_compra"] ?? null;
     $data_vencimento = $_POST["data_vencimento"] ?? null;
     $itens = $_POST["itens"] ?? [];
 
-    if (empty($nome) || empty($data_compra)) {
-        throw new Exception("Nome e data da compra são obrigatórios.");
+    if (empty($data_compra)) {
+        throw new Exception("Data da compra é obrigatória.");
     }
 
     if (empty($itens)) {
         throw new Exception("Adicione pelo menos um item à venda.");
     }
 
-    // ===== CLIENTE (verifica dentro do usuário) =====
-    $stmt = $pdo->prepare("
-        SELECT id FROM clientes 
-        WHERE nome = ? AND usuario_id = ?
-    ");
-    $stmt->execute([$nome, $usuario_id]);
-    $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
+    // =========================
+    // CLIENTE
+    // =========================
 
-    if ($cliente) {
-        $cliente_id = $cliente["id"];
+    if ($cliente_id) {
+
+        // Cliente selecionado via autocomplete
+        $cliente_id = (int)$cliente_id;
+
     } else {
+
+        if (empty($nome) || empty($sobrenome)) {
+            throw new Exception("Nome e sobrenome são obrigatórios.");
+        }
+
+        $nome = ucfirst(strtolower($nome));
+        $sobrenome = ucfirst(strtolower($sobrenome));
+
         $stmt = $pdo->prepare("
-            INSERT INTO clientes (nome, referencia, telefone, usuario_id) 
-            VALUES (?, ?, ?, ?)
+            SELECT id FROM clientes 
+            WHERE usuario_id = ?
+            AND nome = ?
+            AND sobrenome = ?
+            AND (
+                (referencia IS NULL AND ? = '')
+                OR referencia = ?
+            )
+            LIMIT 1
         ");
-        $stmt->execute([$nome, $referencia, $telefone, $usuario_id]);
+
+        $stmt->execute([
+            $usuario_id,
+            $nome,
+            $sobrenome,
+            $referencia,
+            $referencia
+        ]);
+
+        if ($stmt->fetch()) {
+            throw new Exception("Cliente já existe. Selecione-o na lista acima.");
+        }
+
+        $stmt = $pdo->prepare("
+            INSERT INTO clientes (usuario_id, nome, sobrenome, referencia, telefone)
+            VALUES (?, ?, ?, ?, ?)
+        ");
+
+        $stmt->execute([
+            $usuario_id,
+            $nome,
+            $sobrenome,
+            $referencia ?: null,
+            $telefone ?: null
+        ]);
+
         $cliente_id = $pdo->lastInsertId();
     }
 
-    // ===== CRIAR VENDA =====
+    // =========================
+    // CRIAR VENDA
+    // =========================
+
     $stmt = $pdo->prepare("
         INSERT INTO vendas 
         (cliente_id, data_compra, data_vencimento, valor_total, status, usuario_id) 
         VALUES (?, ?, ?, 0, 'ATIVA', ?)
     ");
+
     $stmt->execute([
         $cliente_id,
         $data_compra,
@@ -78,12 +121,11 @@ try {
     $venda_id = $pdo->lastInsertId();
     $valor_total_geral = 0;
 
-    // ===== ITENS =====
     foreach ($itens as $item) {
 
-        $quantidade = (int) ($item["quantidade"] ?? 0);
+        $quantidade = (int)($item["quantidade"] ?? 0);
         $descricao = trim($item["descricao"] ?? '');
-        $valor_unitario = (float) ($item["valor_unitario"] ?? 0);
+        $valor_unitario = (float)($item["valor_unitario"] ?? 0);
 
         if ($quantidade <= 0 || empty($descricao)) {
             continue;
@@ -111,12 +153,12 @@ try {
         throw new Exception("Itens inválidos.");
     }
 
-    // Atualiza total
     $stmt = $pdo->prepare("
         UPDATE vendas 
         SET valor_total = ? 
         WHERE id = ? AND usuario_id = ?
     ");
+
     $stmt->execute([$valor_total_geral, $venda_id, $usuario_id]);
 
     $pdo->commit();

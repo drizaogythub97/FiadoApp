@@ -164,6 +164,7 @@ body {
     cursor: pointer;
     transition: 0.2s ease;
     margin-top: 15px;
+    margin-bottom: 15px;
 }
 
 .btn-primary:hover {
@@ -407,4 +408,83 @@ body {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+.required {
+    color: #DB0707;
+}
+
+.legenda-required {
+    font-size: 12px;
+    color: #DB0707;
+    text-align: right;
+    display: block;
+    margin-bottom: 15px;
+}
+
+/* ==========================
+   AUTOCOMPLETE FIX
+========================== */
+
+.autocomplete-group {
+    position: relative;
+}
+
+.autocomplete-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 3000;
+    border-radius: 8px;
+    margin-top: 5px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.autocomplete-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.autocomplete-item:hover {
+    background-color: #f4f5f7;
+}
+/* Novo cliente label */
+.novo-cliente-label {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.cliente-card {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cliente-top strong {
+    font-size: 16px;
+    color: #DB0707;
+}
+
+.cliente-info {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 14px;
+}
+
+.cliente-actions {
+    display: flex;
+    gap: 12px;
 }

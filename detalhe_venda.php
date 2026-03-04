@@ -20,6 +20,8 @@ if(!$venda){
 $itens = $pdo->prepare("SELECT * FROM itens_venda WHERE venda_id = ?");
 $itens->execute([$id]);
 $itens = $itens->fetchAll(PDO::FETCH_ASSOC);
+$origem = $_GET['origem'] ?? null;
+$cliente_id = $_GET['cliente_id'] ?? null;
 ?>
 
 <!DOCTYPE html>
@@ -99,9 +101,19 @@ $itens = $itens->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <div class="right-actions">
-        <a href="consulta.php" class="btn-secondary" style="text-decoration:none;">
-            Voltar
-        </a>
+        <?php if($origem === 'cliente' && $cliente_id): ?>
+            <a href="cliente_detalhe.php?id=<?= $cliente_id ?>" 
+            class="btn-secondary" 
+            style="text-decoration:none;">
+                Voltar
+            </a>
+        <?php else: ?>
+            <a href="consulta.php" 
+            class="btn-secondary" 
+            style="text-decoration:none;">
+                Voltar
+            </a>
+        <?php endif; ?>
     </div>
 
 </div>

@@ -1,10 +1,21 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['usuario_id'])) {
+    header("Location: index.php");
+    exit;
+}
+
+$nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nova Venda - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=4">
+<link rel="stylesheet" href="assets/css/style.css?v=5">
 </head>
 <body>
 
@@ -18,16 +29,38 @@
 <main class="main-container">
 
     <section class="welcome-box">
-        <h2>Olá, <span class="user-name">Usuário</span></h2>
+        <h2>Olá, <span class="user-name"><?= htmlspecialchars($nome_usuario) ?></span></h2>
         <p>Adicione uma nova venda:</p>
     </section>
 
     <section class="form-card">
 
-        <!-- DADOS DO CLIENTE -->
-        <div class="form-group">
-            <label>Nome do Cliente</label>
-            <input type="text" id="nome">
+        <!-- CLIENTE -->
+        <h3 class="section-title">Cliente</h3>
+
+        <div class="form-group autocomplete-group">
+            <label>Buscar cliente já cadastrado</label>
+            <input type="text" id="clienteBusca" placeholder="Digite nome ou sobrenome" autocomplete="off">
+            <input type="hidden" id="cliente_id">
+            <div id="clienteDropdown" class="autocomplete-dropdown"></div>
+        </div>
+
+        <div class="novo-cliente-label">
+            Novo cliente? Cadastre abaixo:
+        </div>
+
+        <span class="legenda-required">* Campos obrigatórios</span>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nome <span class="required">*</span></label>
+                <input type="text" id="nome" required>
+            </div>
+
+            <div class="form-group">
+                <label>Sobrenome <span class="required">*</span></label>
+                <input type="text" id="sobrenome" required>
+            </div>
         </div>
 
         <div class="form-group">
@@ -68,23 +101,21 @@
         </div>
 
         <!-- AÇÕES -->
-    <div class="form-actions">
+        <div class="form-actions">
 
-        <div class="left-actions">
-            <button class="btn-primary" onclick="salvarVenda()">
-                Salvar Venda
-            </button>
+            <div class="left-actions">
+                <button class="btn-primary" onclick="salvarVenda()">
+                    Salvar Venda
+                </button>
+            </div>
+
+            <div class="right-actions">
+                <a href="dashboard.php" class="btn-secondary" style="text-decoration:none;">
+                    Voltar
+                </a>
+            </div>
+
         </div>
-
-        <div class="right-actions">
-            <a href="dashboard.php" class="btn-secondary" style="text-decoration:none;">
-                Voltar
-            </a>
-        </div>
-
-    </div>
-
-        <p id="mensagem" class="mensagem"></p>
 
     </section>
 

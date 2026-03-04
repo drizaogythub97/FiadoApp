@@ -48,7 +48,7 @@ if(!isset($_SESSION['usuario_id'])){
             Consultar Vendas
         </a>
 
-        <a href="relatorio.php" class="btn-primary" style="text-decoration:none; text-align:center;">
+        <a href="relatorios.php" class="btn-primary" style="text-decoration:none; text-align:center;">
             Relatórios
         </a>
 
