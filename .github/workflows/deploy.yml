@@ -3,7 +3,7 @@ name: Deploy FiadoApp → Hostinger
 on:
   push:
     branches:
-      - main  # dispara apenas quando fizer push na branch main
+      - main
 
 jobs:
   deploy:
@@ -15,7 +15,7 @@ jobs:
       - name: 📥 Baixar repositório
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # necessário para detectar apenas arquivos alterados
+          fetch-depth: 2
 
       - name: 🚀 Deploy via FTP para Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -23,7 +23,8 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/  # pasta raiz do site na Hostinger
+          port: 21
+          server-dir: /public_html/
           exclude: |
             **/.git*
             **/.git*/**
