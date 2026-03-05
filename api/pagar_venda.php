@@ -15,6 +15,7 @@ if ($input) {
 }
 
 $id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+$usuario_id = $_SESSION['usuario_id'];
 
 if ($id <= 0) {
     echo json_encode(["status" => "erro", "mensagem" => "ID inválido"]);
@@ -25,9 +26,9 @@ try {
 
     $pdo->beginTransaction();
 
-    // Verifica se venda existe e está ativa
-    $stmt = $pdo->prepare("SELECT valor_total, status FROM vendas WHERE id = ?");
-    $stmt->execute([$id]);
+    // Verifica se venda existe, está ativa e pertence ao usuário logado
+    $stmt = $pdo->prepare("SELECT valor_total, status FROM vendas WHERE id = ? AND usuario_id = ?");
+    $stmt->execute([$id, $usuario_id]);
     $venda = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$venda) {
@@ -42,18 +43,18 @@ try {
 
     // Registrar pagamento
     $stmt = $pdo->prepare("
-        INSERT INTO pagamentos (venda_id, valor_pago)
-        VALUES (?, ?)
+        INSERT INTO pagamentos (venda_id, valor_pago, usuario_id)
+        VALUES (?, ?, ?)
     ");
-    $stmt->execute([$id, $valor_total]);
+    $stmt->execute([$id, $valor_total, $usuario_id]);
 
-    // Atualizar status
+    // CORRIGIDO: adicionado quitado_em = NOW() que estava faltando
     $stmt = $pdo->prepare("
         UPDATE vendas 
-        SET status = 'PAGA'
-        WHERE id = ?
+        SET status = 'PAGA', quitado_em = NOW()
+        WHERE id = ? AND usuario_id = ?
     ");
-    $stmt->execute([$id]);
+    $stmt->execute([$id, $usuario_id]);
 
     $pdo->commit();
 

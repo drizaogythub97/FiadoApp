@@ -61,10 +61,11 @@ async function carregarClientes(letra) {
     });
 }
 
-function detalharCliente(id){
-    window.location.href = `cliente_detalhe.php?id=${clienteid}`;
+function detalharCliente(id) {
+    window.location.href = `cliente_detalhe.php?id=${id}`;
 }
 
-function historicoCliente(id){
-    window.location.href = `cliente_historico.php?id=${cliente.id}`;
+
+function historicoCliente(id) {
+    window.location.href = `cliente_historico.php?id=${id}`;
 }

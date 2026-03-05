@@ -3,15 +3,17 @@ require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/conexao.php';
 
 $id = $_GET['id'] ?? 0;
+$usuario_id = $_SESSION['usuario_id'];
 
 $stmt = $pdo->prepare("
     SELECT v.*, c.nome, c.referencia, c.telefone
     FROM vendas v
     JOIN clientes c ON v.cliente_id = c.id
     WHERE v.id = ?
+    AND v.usuario_id = ?
 ");
 
-$stmt->execute([$id]);
+$stmt->execute([$id, $usuario_id]);
 $venda = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if(!$venda){
