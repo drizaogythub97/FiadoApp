@@ -1,6 +1,25 @@
+function formatarData(dataISO) {
+    if (!dataISO) return '—';
+    const partes = dataISO.split(' ')[0].split('-');
+    if (partes.length < 3) return dataISO;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function formatarMoeda(valor) {
+    return parseFloat(valor).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 async function buscarRelatorio(){
 
     const filtros = obterFiltros();
+    const container = document.getElementById("resultadoRelatorio");
+    const exportBtns = document.getElementById("exportBtns");
+
+    container.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Buscando...</p>`;
+    exportBtns.style.display = "none";
 
     const response = await fetch("/api/gerar_relatorio.php", {
         method: "POST",
@@ -9,31 +28,37 @@ async function buscarRelatorio(){
     });
 
     const dados = await response.json();
-
-    const container = document.getElementById("resultadoRelatorio");
     container.innerHTML = "";
 
     if(dados.length === 0){
-        container.innerHTML = "<p>Nenhum resultado encontrado.</p>";
+        container.innerHTML = `<p style="color:var(--text-muted); font-size:14px; padding:8px 0;">Nenhum resultado encontrado.</p>`;
         return;
     }
 
     dados.forEach(venda => {
 
+        const isAtiva = venda.status === 'ATIVA';
+        const badgeClass = isAtiva ? 'badge-ativa' : 'badge-paga';
+        const badgeTexto = isAtiva ? '● Ativa' : '✓ Paga';
+
         container.innerHTML += `
-            <div class="venda-card">
-                <div>
-                    <strong>
-                        ${venda.nome} ${venda.sobrenome} 
+            <div class="relatorio-card">
+                <div class="relatorio-card-info">
+                    <span class="relatorio-card-nome">
+                        ${venda.nome} ${venda.sobrenome}
                         ${venda.referencia ? `(${venda.referencia})` : ""}
-                    </strong>
-                    <div>Data: ${venda.data_compra}</div>
-                    <div>Valor: R$ ${parseFloat(venda.valor_total).toFixed(2)}</div>
-                    <div>Status: ${venda.status}</div>
+                    </span>
+                    <span class="relatorio-card-meta">📅 ${formatarData(venda.data_compra)}</span>
+                </div>
+                <div class="relatorio-card-right">
+                    <span class="relatorio-card-valor">R$ ${formatarMoeda(venda.valor_total)}</span>
+                    <span class="badge ${badgeClass}">${badgeTexto}</span>
                 </div>
             </div>
         `;
     });
+
+    exportBtns.style.display = "grid";
 }
 
 function exportarCSV(){

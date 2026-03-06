@@ -39,26 +39,32 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Criar Conta - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=5">
+<link rel="stylesheet" href="assets/css/style.css?v=7">
 </head>
 <body>
 
 <header class="header">
     <div class="header-content">
-        <img src="assets/img/logo.png" class="logo">
-        <h1>FiadoApp</h1>
+        <div class="header-brand">
+            <img src="assets/img/logo.png" class="logo">
+            <h1>FiadoApp</h1>
+        </div>
     </div>
 </header>
 
-<main class="main-container">
+<main class="main-container" style="max-width:480px;">
+
+<div class="welcome-box">
+    <h2>Criar Conta</h2>
+    <p>Preencha os dados abaixo para criar sua conta.</p>
+</div>
 
 <section class="form-card">
 
-<h2 style="margin-bottom:20px;">Criar Conta</h2>
-
 <?php if($mensagem): ?>
-<p class="mensagem"><?= $mensagem ?></p>
+<p class="mensagem"><?= htmlspecialchars($mensagem) ?></p>
 <?php endif; ?>
 
 <form method="POST">
@@ -73,21 +79,23 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
 <div class="form-group">
     <label id="labelNome">Nome</label>
-    <input type="text" name="nome" required>
+    <input type="text" name="nome" placeholder="Seu nome ou nome da empresa" required>
 </div>
 
 <div class="form-group">
     <label>Email</label>
-    <input type="email" name="email" required>
+    <input type="email" name="email" placeholder="seu@email.com" required>
 </div>
 
 <div class="form-group">
     <label>Senha</label>
-    <input type="password" name="senha" required>
+    <input type="password" name="senha" placeholder="Crie uma senha" required>
 </div>
 
 <div class="form-actions">
-    <div></div>
+    <div class="left-actions">
+        <a href="index.php" class="btn-secondary" style="text-decoration:none;">← Voltar</a>
+    </div>
     <div class="right-actions">
         <button type="submit" class="btn-primary">Cadastrar</button>
     </div>
@@ -100,7 +108,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 </main>
 
 <footer class="footer">
-FiadoApp - Todos os direitos reservados para Adriano Cardoso.
+    FiadoApp — Todos os direitos reservados para Adriano Cardoso.
 </footer>
 
 <script>
@@ -115,8 +123,6 @@ tipoSelect.addEventListener("change", function(){
     }
 });
 </script>
-<script src="/assets/js/toast.js"></script>
-<script src="/assets/js/cadastro.js"></script>
 <div id="toast-container"></div>
 
 </body>

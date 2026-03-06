@@ -10,23 +10,28 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nova Venda - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=5">
+<link rel="stylesheet" href="assets/css/style.css?v=7">
 </head>
 <body>
 
 <header class="header">
     <div class="header-content">
-        <img src="assets/img/logo.png" class="logo">
-        <h1>FiadoApp</h1>
+        <div class="header-brand">
+            <img src="assets/img/logo.png" class="logo">
+            <h1>FiadoApp</h1>
+        </div>
+        <div class="header-actions">
+            <a href="logout.php" class="btn-header-action">↪ Sair</a>
+        </div>
     </div>
 </header>
 
 <main class="main-container">
 
-    <section class="welcome-box">
+    <div class="welcome-box">
         <h2>Olá, <span class="user-name"><?= htmlspecialchars($nome_usuario) ?></span></h2>
         <p>Adicione uma nova venda:</p>
-    </section>
+    </div>
 
     <section class="form-card">
 
@@ -49,23 +54,23 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
         <div class="form-row">
             <div class="form-group">
                 <label>Nome <span class="required">*</span></label>
-                <input type="text" id="nome" required>
+                <input type="text" id="nome" placeholder="Nome do cliente" required>
             </div>
 
             <div class="form-group">
                 <label>Sobrenome <span class="required">*</span></label>
-                <input type="text" id="sobrenome" required>
+                <input type="text" id="sobrenome" placeholder="Sobrenome" required>
             </div>
         </div>
 
         <div class="form-group">
             <label>Referência</label>
-            <input type="text" id="referencia">
+            <input type="text" id="referencia" placeholder="Ex: Filho, Esposa, Loja...">
         </div>
 
         <div class="form-group">
             <label>Telefone</label>
-            <input type="text" id="telefone">
+            <input type="text" id="telefone" placeholder="(00) 00000-0000">
         </div>
 
         <!-- DATAS -->
@@ -86,13 +91,13 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
 
         <div id="produtos"></div>
 
-        <button type="button" class="btn-secondary" onclick="adicionarProduto()">
+        <button type="button" class="btn-add-produto" onclick="adicionarProduto()">
             + Adicionar Produto
         </button>
 
         <!-- TOTAL -->
         <div class="total-box">
-            Total Geral: R$ <span id="totalGeral">0.00</span>
+            Total Geral: R$ <span id="totalGeral">0,00</span>
         </div>
 
         <!-- AÇÕES -->
@@ -100,13 +105,13 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
 
             <div class="left-actions">
                 <button class="btn-primary" onclick="salvarVenda()">
-                    Salvar Venda
+                    💾 Salvar Venda
                 </button>
             </div>
 
             <div class="right-actions">
                 <a href="dashboard.php" class="btn-secondary" style="text-decoration:none;">
-                    Voltar
+                    ← Voltar
                 </a>
             </div>
 
@@ -117,7 +122,7 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
 </main>
 
 <footer class="footer">
-    FiadoApp - Todos os direitos reservados para Adriano Cardoso.
+    FiadoApp — Todos os direitos reservados para Adriano Cardoso.
 </footer>
 
 <script src="/assets/js/toast.js"></script>

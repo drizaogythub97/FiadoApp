@@ -8,59 +8,65 @@ require_once __DIR__ . '/config/auth.php'
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=3">
+<link rel="stylesheet" href="assets/css/style.css?v=7">
 </head>
 <body>
 
 <header class="header">
     <div class="header-content">
-        <img src="assets/img/logo.png" class="logo">
-        <h1>FiadoApp</h1>
+        <div class="header-brand">
+            <img src="assets/img/logo.png" class="logo">
+            <h1>FiadoApp</h1>
+        </div>
+        <div class="header-actions">
+            <a href="logout.php" class="btn-header-action">↪ Sair</a>
+        </div>
     </div>
 </header>
 
 <main class="main-container">
 
-<h2 style="
-    color:#DB0707;
-    font-weight:700;
-    font-size:26px;
-    margin-bottom:5px;
-">
-    Olá, <?= $_SESSION['usuario_nome'] ?>
-</h2>
+    <div class="welcome-box">
+        <h2>Olá, <span class="user-name"><?= htmlspecialchars($_SESSION['usuario_nome']) ?></span></h2>
+        <p>Gerencie suas vendas e acompanhe seus recebimentos.</p>
+    </div>
 
-<p style="color:#555; font-size:15px; margin-bottom:5px;">
-    Gerencie suas vendas e acompanhe seus recebimentos.
-</p>
+    <section class="form-card">
+        <div class="nav-grid">
 
-    <section class="form-card" style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;">
+            <a href="cadastro.php" class="nav-card">
+                <div class="nav-card-icon nav-icon-red">➕</div>
+                <div class="nav-card-text">
+                    <span class="nav-card-label">Nova Venda</span>
+                    <span class="nav-card-desc">Registrar venda fiado</span>
+                </div>
+            </a>
 
-        <a href="cadastro.php" class="btn-primary" style="text-decoration:none; text-align:center;">
-            Nova Venda
-        </a>
+            <a href="consulta.php" class="nav-card">
+                <div class="nav-card-icon nav-icon-blue">🔍</div>
+                <div class="nav-card-text">
+                    <span class="nav-card-label">Consultar Vendas</span>
+                    <span class="nav-card-desc">Buscar e quitar clientes</span>
+                </div>
+            </a>
 
-        <a href="consulta.php" class="btn-primary" style="text-decoration:none; text-align:center;">
-            Consultar Vendas
-        </a>
+            <a href="relatorios.php" class="nav-card">
+                <div class="nav-card-icon nav-icon-green">📊</div>
+                <div class="nav-card-text">
+                    <span class="nav-card-label">Relatórios</span>
+                    <span class="nav-card-desc">Filtrar e exportar vendas</span>
+                </div>
+            </a>
 
-        <a href="relatorios.php" class="btn-primary" style="text-decoration:none; text-align:center;">
-            Relatórios
-        </a>
-
+        </div>
     </section>
-
-    <div style="position:absolute; right:25px;">
-    <a href="logout.php" class="btn-secondary" style="text-decoration:none;">
-        Sair
-    </a>
-</div>
 
 </main>
 
 <footer class="footer">
-    FiadoApp - Todos os direitos reservados para Adriano Cardoso.
+    FiadoApp — Todos os direitos reservados para Adriano Cardoso.
 </footer>
+
 <script src="/assets/js/toast.js"></script>
 <div id="toast-container"></div>
 </body>

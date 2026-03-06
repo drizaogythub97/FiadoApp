@@ -33,71 +33,69 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=6">
+<link rel="stylesheet" href="assets/css/style.css?v=7">
 </head>
 <body>
 
 <header class="header">
     <div class="header-content">
-        <img src="assets/img/logo.png" class="logo">
-        <h1>FiadoApp</h1>
+        <div class="header-brand">
+            <img src="assets/img/logo.png" class="logo">
+            <h1>FiadoApp</h1>
+        </div>
     </div>
 </header>
 
-<main class="main-container">
+<main class="main-container" style="max-width:480px;">
 
-<h2 style="color:#DB0707; font-weight:700; margin-bottom:5px;">
-    Bem-vindo ao FiadoApp
-</h2>
-
-<p style="color:#555; margin-bottom:5px;">
-    Sistema para organização e controle de vendas a prazo.
-    Faça o login ou cadastre-se!
-</p>
-
-<section class="form-card">
-
-<h2 style="margin-bottom:20px;">Login</h2>
-
-<?php if($mensagem): ?>
-<p class="mensagem"><?= $mensagem ?></p>
-<?php endif; ?>
-
-<form method="POST">
-
-<div class="form-group">
-    <label>Email</label>
-    <input type="email" name="email" required>
-</div>
-
-<div class="form-group">
-    <label>Senha</label>
-    <input type="password" name="senha" required>
-</div>
-
-<div class="form-actions">
-    <div class="left-actions">
-        <a href="cadastro_usuario.php" class="btn-secondary" style="text-decoration:none;">
-            Criar Conta
-        </a>
+    <div class="welcome-box">
+        <h2>Bem-vindo ao FiadoApp</h2>
+        <p>Sistema para organização e controle de vendas a prazo. Faça o login ou cadastre-se!</p>
     </div>
-    <div class="right-actions">
-        <button type="submit" class="btn-primary">Entrar</button>
-    </div>
-</div>
 
-</form>
+    <section class="form-card">
 
-</section>
+        <h2>Login</h2>
+
+        <?php if($mensagem): ?>
+        <p class="mensagem"><?= htmlspecialchars($mensagem) ?></p>
+        <?php endif; ?>
+
+        <form method="POST">
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="seu@email.com" required>
+            </div>
+
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" name="senha" placeholder="••••••••" required>
+            </div>
+
+            <div class="form-actions">
+                <div class="left-actions">
+                    <a href="cadastro_usuario.php" class="btn-secondary" style="text-decoration:none;">
+                        Criar Conta
+                    </a>
+                </div>
+                <div class="right-actions">
+                    <button type="submit" class="btn-primary">Entrar</button>
+                </div>
+            </div>
+
+        </form>
+
+    </section>
 
 </main>
 
 <footer class="footer">
-FiadoApp - Todos os direitos reservados para Adriano Cardoso.
+    FiadoApp — Todos os direitos reservados para Adriano Cardoso.
 </footer>
-<script src="/assets/js/toast.js"></script>
-<script src="/assets/js/cadastro.js"></script>
+
 <div id="toast-container"></div>
 </body>
 </html>

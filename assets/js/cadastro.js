@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const dropdown = document.getElementById("clienteDropdown");
     const clienteIdInput = document.getElementById("cliente_id");
 
+    if (!clienteBusca) return;
+
     clienteBusca.addEventListener("input", async function () {
 
         const termo = this.value.trim();
@@ -75,11 +77,20 @@ function adicionarProduto() {
     wrapper.classList.add("produto-wrapper");
 
     wrapper.innerHTML = `
-        <button type="button" class="btn-remover">X</button>
-        <div class="produto">
-            <input type="number" min="1" placeholder="Qtd" class="quantidade">
-            <input type="text" placeholder="Descrição" class="descricao">
-            <input type="number" step="0.01" placeholder="Valor Unitário" class="valorUnitario">
+        <button type="button" class="btn-remover">×</button>
+        <div class="produto-card">
+            <div class="produto-field">
+                <label class="produto-label">Qtd</label>
+                <input type="number" min="1" placeholder="0" class="quantidade">
+            </div>
+            <div class="produto-field">
+                <label class="produto-label">Descrição</label>
+                <input type="text" placeholder="Ex: Ração 15kg" class="descricao">
+            </div>
+            <div class="produto-field">
+                <label class="produto-label">Valor Unit.</label>
+                <input type="number" step="0.01" placeholder="0.00" class="valorUnitario">
+            </div>
         </div>
     `;
 
@@ -95,7 +106,7 @@ function calcularTotal() {
 
     totalGeral = 0;
 
-    const produtos = document.querySelectorAll(".produto");
+    const produtos = document.querySelectorAll(".produto-card");
 
     produtos.forEach(prod => {
 
@@ -105,12 +116,15 @@ function calcularTotal() {
         totalGeral += qtd * valor;
     });
 
-    document.getElementById("totalGeral").innerText = totalGeral.toFixed(2);
+    document.getElementById("totalGeral").innerText = totalGeral.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
 
 document.addEventListener("input", function(e){
 
-    if(e.target.classList.contains("quantidade") || 
+    if(e.target.classList.contains("quantidade") ||
        e.target.classList.contains("valorUnitario")) {
 
         calcularTotal();
@@ -127,7 +141,7 @@ async function salvarVenda() {
 
     const produtos = [];
 
-    document.querySelectorAll(".produto").forEach(prod => {
+    document.querySelectorAll(".produto-card").forEach(prod => {
 
         produtos.push({
             quantidade: prod.querySelector(".quantidade").value,
