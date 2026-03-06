@@ -39,6 +39,7 @@ require_once __DIR__ . '/config/auth.php';
         </div>
 
         <!-- FILTRO DE STATUS -->
+        <span class="filter-label">Filtrar por situação</span>
         <div class="status-filter">
             <button class="status-pill active" data-status="todos">Todos</button>
             <button class="status-pill" data-status="devedor">Com débito</button>
@@ -46,6 +47,7 @@ require_once __DIR__ . '/config/auth.php';
         </div>
 
         <!-- FILTRO POR LETRA -->
+        <span class="filter-label">Ou pesquise pela inicial do nome</span>
         <div class="alphabet-filter" id="alphabet"></div>
 
         <!-- CONTAGEM -->

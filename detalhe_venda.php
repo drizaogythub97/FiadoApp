@@ -117,11 +117,20 @@ if($origem === 'cliente' && $cliente_id){
     FiadoApp — Todos os direitos reservados para Adriano Cardoso.
 </footer>
 
+<script src="/assets/js/toast.js"></script>
+<script src="/assets/js/cliente.js"></script>
 <script>
 async function marcarComoPaga(id){
-    if(!confirm("Tem certeza que deseja marcar esta venda como paga?")){
-        return;
-    }
+
+    const confirmado = await abrirModal({
+        titulo:       'Marcar Venda como Paga',
+        mensagem:     'Esta venda será marcada como paga e um comprovante PDF será gerado. Esta ação não pode ser desfeita.',
+        btnConfirmar: '✓ Confirmar Pagamento',
+        btnClasse:    'success'
+    });
+
+    if(!confirmado) return;
+
     const response = await fetch("api/pagar_venda.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -132,11 +141,10 @@ async function marcarComoPaga(id){
         window.open(resultado.pdf_url, "_blank");
         location.reload();
     } else {
-        alert("Erro ao marcar como paga.");
+        showToast("Erro ao marcar como paga.", "error");
     }
 }
 </script>
-<script src="/assets/js/toast.js"></script>
 <div id="toast-container"></div>
 
 </body>

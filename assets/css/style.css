@@ -1688,3 +1688,124 @@ body {
         font-size: 16px;
     }
 }
+
+/* ==========================
+   MODAL CUSTOMIZADO
+========================== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9000;
+    padding: 20px;
+    animation: modalFadeIn 0.2s ease;
+}
+
+.modal-card {
+    background: var(--bg-surface-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 28px 28px 24px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    animation: modalSlideUp 0.25s ease;
+}
+
+.modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.modal-message {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.modal-input-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    transition: 0.2s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-alpha);
+}
+
+.modal-input::placeholder {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.modal-input.modal-input-error {
+    border-color: var(--brand);
+    animation: shake 0.3s ease;
+}
+
+.modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.modal-actions .btn-primary,
+.modal-actions .btn-secondary,
+.modal-actions .btn-success {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+}
+
+/* Label de filtro na consulta */
+.filter-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: block;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%       { transform: translateX(-6px); }
+    75%       { transform: translateX(6px); }
+}
