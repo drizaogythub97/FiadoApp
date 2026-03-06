@@ -7,6 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -38,6 +39,11 @@ public class MainActivity extends AppCompatActivity {
         offlineView  = findViewById(R.id.offlineView);
         swipeRefresh = findViewById(R.id.swipeRefresh);
 
+        // ── Sessão persistente: aceita e persiste cookies entre reinicializações ──
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(webView, true);
+
         // Cor do indicador de refresh
         swipeRefresh.setColorSchemeResources(R.color.brand);
         swipeRefresh.setProgressBackgroundColorSchemeResource(R.color.bg_surface_1);
@@ -54,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        s.setDatabaseEnabled(true);
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
@@ -76,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
             public void onPageFinished(WebView view, String url) {
                 progressBar.setVisibility(View.GONE);
                 swipeRefresh.setRefreshing(false);
+                // Persiste cookies em disco sempre que uma página termina de carregar
+                CookieManager.getInstance().flush();
             }
 
             @Override
@@ -125,6 +134,22 @@ public class MainActivity extends AppCompatActivity {
                 webView.loadUrl(APP_URL);
             }
         });
+    }
+
+    // ── Ciclo de vida: salva cookies ao entrar em background ──
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Garante que os cookies sejam gravados no disco quando o app vai para segundo plano
+        CookieManager.getInstance().flush();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Segunda camada de segurança: flush quando o app é completamente ocultado
+        CookieManager.getInstance().flush();
     }
 
     // Navega para trás na WebView ou fecha a Activity

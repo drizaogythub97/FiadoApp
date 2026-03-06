@@ -1,6 +1,12 @@
 <?php
-session_start();
+require_once __DIR__ . '/config/session.php';
 require_once __DIR__ . '/config/conexao.php';
+
+// Se já estiver logado, redireciona direto ao dashboard
+if (isset($_SESSION['usuario_id'])) {
+    header("Location: dashboard.php");
+    exit;
+}
 
 $mensagem = "";
 
