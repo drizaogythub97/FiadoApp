@@ -3,7 +3,8 @@ require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/conexao.php';
 
 $usuario_id = $_SESSION['usuario_id'];
-$cliente_id = $_GET['id'] ?? 0;
+$cliente_id = $_GET['id']    ?? 0;
+$volta      = $_GET['volta'] ?? null;
 
 $stmt = $pdo->prepare("
     SELECT * FROM clientes 
@@ -25,6 +26,8 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$cliente_id, $usuario_id]);
 $vendas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -32,7 +35,7 @@ $vendas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Detalhe Cliente - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=7">
+<link rel="stylesheet" href="assets/css/style.css?v=8">
 </head>
 <body>
 
@@ -70,9 +73,7 @@ $vendas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <hr>
 
-    <h3 style="font-size:13px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--brand); margin-bottom:12px;">
-        Vendas Ativas
-    </h3>
+    <h3 class="section-title" style="margin-top:0;">Vendas Ativas</h3>
 
     <?php if(empty($vendas)): ?>
         <p style="color:var(--text-muted); font-size:14px; padding:8px 0;">Este cliente não possui vendas ativas.</p>
@@ -95,7 +96,7 @@ $vendas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <span class="venda-valor">R$ <?= number_format($venda['valor_total'], 2, ',', '.') ?></span>
         </div>
 
-        <a href="detalhe_venda.php?id=<?= $venda['id'] ?>&origem=cliente&cliente_id=<?= $cliente_id ?>"
+        <a href="detalhe_venda.php?id=<?= $venda['id'] ?>&origem=cliente&cliente_id=<?= $cliente_id ?><?= $volta ? '&volta=' . urlencode($volta) : '' ?>"
            class="btn-secondary"
            style="text-decoration:none; font-size:13px; padding:8px 14px;">
             Detalhar
@@ -128,8 +129,12 @@ $vendas = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
     <?php endif; ?>
 
-    <div style="margin-top:16px;">
-        <a href="consulta.php" class="btn-secondary" style="text-decoration:none;">
+    <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="cliente_historico.php?id=<?= $cliente_id ?><?= $volta ? '&volta=' . urlencode($volta) : '' ?>"
+           class="btn-secondary" style="text-decoration:none;">
+            📋 Ver Histórico
+        </a>
+        <a href="<?= htmlspecialchars($voltaURL) ?>" class="btn-secondary" style="text-decoration:none;">
             ← Voltar
         </a>
     </div>

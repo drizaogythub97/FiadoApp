@@ -1,14 +1,13 @@
 <?php
 require_once __DIR__ . '/config/auth.php';
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Consultar Vendas - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=7">
+<link rel="stylesheet" href="assets/css/style.css?v=8">
 </head>
 <body>
 
@@ -27,14 +26,32 @@ require_once __DIR__ . '/config/auth.php';
 <main class="main-container">
 
     <div class="welcome-box">
-        <h2>Consultar Vendas</h2>
-        <p>Selecione uma letra para buscar clientes:</p>
+        <h2>Consultar Clientes</h2>
+        <p>Busque por nome ou selecione uma letra para filtrar.</p>
     </div>
 
     <section class="form-card">
 
+        <!-- BUSCA POR NOME -->
+        <div class="consulta-search">
+            <span class="consulta-search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Buscar cliente pelo nome..." autocomplete="off">
+        </div>
+
+        <!-- FILTRO DE STATUS -->
+        <div class="status-filter">
+            <button class="status-pill active" data-status="todos">Todos</button>
+            <button class="status-pill" data-status="devedor">Com débito</button>
+            <button class="status-pill" data-status="ok">Sem débito</button>
+        </div>
+
         <!-- FILTRO POR LETRA -->
         <div class="alphabet-filter" id="alphabet"></div>
+
+        <!-- CONTAGEM -->
+        <div class="consulta-resultados-header" id="resultadosHeader" style="display:none;">
+            <span id="resultadosCount"></span>
+        </div>
 
         <!-- RESULTADOS -->
         <div id="listaVendas"></div>

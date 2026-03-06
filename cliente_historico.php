@@ -1,15 +1,36 @@
 <?php
 require_once __DIR__ . '/config/auth.php';
-?>
+require_once __DIR__ . '/config/conexao.php';
 
+$usuario_id  = $_SESSION['usuario_id'];
+$cliente_id  = $_GET['id']    ?? 0;
+$volta       = $_GET['volta'] ?? null;
+
+// Buscar dados do cliente
+$stmtCliente = $pdo->prepare("
+    SELECT nome, sobrenome, referencia, telefone
+    FROM clientes
+    WHERE id = ? AND usuario_id = ?
+");
+$stmtCliente->execute([$cliente_id, $usuario_id]);
+$cliente = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+
+$nomeCliente = $cliente ? htmlspecialchars($cliente['nome']) : 'Cliente';
+if($cliente && $cliente['sobrenome']) $nomeCliente .= ' ' . htmlspecialchars($cliente['sobrenome']);
+
+$infoCliente = '';
+if($cliente && $cliente['referencia']) $infoCliente .= '(' . htmlspecialchars($cliente['referencia']) . ')';
+if($cliente && $cliente['telefone'])   $infoCliente .= ($infoCliente ? ' · ' : '') . '📞 ' . htmlspecialchars($cliente['telefone']);
+
+$voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Histórico do Cliente - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=7">
+<link rel="stylesheet" href="assets/css/style.css?v=8">
 </head>
 
 <body>
@@ -34,14 +55,22 @@ require_once __DIR__ . '/config/auth.php';
 
 <section class="form-card">
 
-<div id="historico"></div>
-
-<div class="form-actions" style="margin-top:8px;">
-    <div></div>
-    <div class="right-actions">
-        <a href="consulta.php" class="btn-secondary" style="text-decoration:none;">← Voltar</a>
+    <!-- HEADER DO CLIENTE -->
+    <div class="historico-cliente-header">
+        <div class="historico-cliente-icon">👤</div>
+        <div class="historico-cliente-info">
+            <h3><?= $nomeCliente ?></h3>
+            <?php if($infoCliente): ?>
+                <p><?= $infoCliente ?></p>
+            <?php endif; ?>
+        </div>
     </div>
-</div>
+
+    <div id="historico"></div>
+
+    <div class="stacked-actions">
+        <a href="<?= htmlspecialchars($voltaURL) ?>" class="btn-secondary">← Voltar</a>
+    </div>
 
 </section>
 
@@ -53,8 +82,8 @@ require_once __DIR__ . '/config/auth.php';
 
 <script>
 
-const urlParams = new URLSearchParams(window.location.search);
-const clienteId = urlParams.get("id");
+const urlParams  = new URLSearchParams(window.location.search);
+const clienteId  = urlParams.get("id");
 
 function formatarData(dataISO) {
     if (!dataISO) return '—';
@@ -73,7 +102,7 @@ function formatarMoeda(valor) {
 async function carregarHistorico(){
 
     const response = await fetch(`/api/listar_historico_cliente.php?cliente_id=${clienteId}`);
-    const vendas = await response.json();
+    const vendas   = await response.json();
     const container = document.getElementById("historico");
 
     if(vendas.length === 0){

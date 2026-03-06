@@ -23,21 +23,29 @@ if(!$venda){
 $itens = $pdo->prepare("SELECT * FROM itens_venda WHERE venda_id = ?");
 $itens->execute([$id]);
 $itens = $itens->fetchAll(PDO::FETCH_ASSOC);
-$origem = $_GET['origem'] ?? null;
+
+$origem    = $_GET['origem']    ?? null;
 $cliente_id = $_GET['cliente_id'] ?? null;
+$volta     = $_GET['volta']     ?? null;
 
 $nomeCompleto = htmlspecialchars($venda['nome']);
 if($venda['sobrenome']) $nomeCompleto .= ' ' . htmlspecialchars($venda['sobrenome']);
 if($venda['referencia']) $nomeCompleto .= ' (' . htmlspecialchars($venda['referencia']) . ')';
-?>
 
+// URL do botão Voltar
+if($origem === 'cliente' && $cliente_id){
+    $voltaURL = "cliente_detalhe.php?id={$cliente_id}" . ($volta ? "&volta={$volta}" : "");
+} else {
+    $voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Detalhe da Venda - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=7">
+<link rel="stylesheet" href="assets/css/style.css?v=8">
 </head>
 <body>
 
@@ -81,9 +89,7 @@ if($venda['referencia']) $nomeCompleto .= ' (' . htmlspecialchars($venda['refere
 
     <hr>
 
-    <h3 style="font-size:13px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--brand); margin-bottom:12px;">
-        Itens da Venda
-    </h3>
+    <h3 class="section-title" style="margin-top:0;">Itens da Venda</h3>
 
     <div>
     <?php foreach($itens as $item): ?>
@@ -94,28 +100,13 @@ if($venda['referencia']) $nomeCompleto .= ' (' . htmlspecialchars($venda['refere
     <?php endforeach; ?>
     </div>
 
-    <div class="form-actions">
-
-        <div class="left-actions">
-            <?php if($venda['status'] === 'ATIVA'): ?>
-                <button class="btn-success" onclick="marcarComoPaga(<?= $venda['id'] ?>)">
-                    ✓ Marcar como Paga
-                </button>
-            <?php endif; ?>
-        </div>
-
-        <div class="right-actions">
-            <?php if($origem === 'cliente' && $cliente_id): ?>
-                <a href="cliente_detalhe.php?id=<?= $cliente_id ?>"
-                class="btn-secondary"
-                style="text-decoration:none;">← Voltar</a>
-            <?php else: ?>
-                <a href="consulta.php"
-                class="btn-secondary"
-                style="text-decoration:none;">← Voltar</a>
-            <?php endif; ?>
-        </div>
-
+    <div class="stacked-actions">
+        <?php if($venda['status'] === 'ATIVA'): ?>
+            <button class="btn-success" onclick="marcarComoPaga(<?= $venda['id'] ?>)">
+                ✓ Marcar como Paga
+            </button>
+        <?php endif; ?>
+        <a href="<?= htmlspecialchars($voltaURL) ?>" class="btn-secondary">← Voltar</a>
     </div>
 
 </section>
@@ -128,19 +119,15 @@ if($venda['referencia']) $nomeCompleto .= ' (' . htmlspecialchars($venda['refere
 
 <script>
 async function marcarComoPaga(id){
-
     if(!confirm("Tem certeza que deseja marcar esta venda como paga?")){
         return;
     }
-
     const response = await fetch("api/pagar_venda.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id })
     });
-
     const resultado = await response.json();
-
     if(resultado.status === "sucesso"){
         window.open(resultado.pdf_url, "_blank");
         location.reload();
