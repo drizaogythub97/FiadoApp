@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Tema base do app — barra de status escura -->
+    <style name="Theme.FiadoApp" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/bg_page</item>
+        <item name="android:statusBarColor">@color/status_bar</item>
+        <item name="android:navigationBarColor">@color/nav_bar</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="colorPrimary">@color/brand</item>
+        <item name="colorPrimaryDark">@color/bg_surface_1</item>
+        <item name="colorAccent">@color/brand</item>
+    </style>
+
+    <!-- Tema da SplashActivity — sem action bar, fundo escuro -->
+    <style name="Theme.FiadoApp.Splash" parent="Theme.FiadoApp">
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowBackground">@color/bg_page</item>
+    </style>
+
+</resources>

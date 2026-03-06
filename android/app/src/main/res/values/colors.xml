@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Espelho das variáveis CSS do app web -->
+    <color name="bg_page">#13131A</color>
+    <color name="bg_surface_1">#19192A</color>
+    <color name="bg_surface_2">#1E1E2E</color>
+    <color name="brand">#E8624A</color>
+    <color name="text_primary">#F0F0F8</color>
+    <color name="text_muted">#585878</color>
+    <color name="status_bar">#13131A</color>
+    <color name="nav_bar">#13131A</color>
+</resources>

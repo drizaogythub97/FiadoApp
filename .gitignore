@@ -1,0 +1,11 @@
+# Projeto Android — arquivos gerados
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/**/*.jks
+android/**/*.keystore
+android/.idea/
+
+# Arquivos Diversos
+PROMPT_FIADOAPP.md
