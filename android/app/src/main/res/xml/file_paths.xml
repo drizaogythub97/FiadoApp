@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Pasta de cache usada para PDFs baixados antes de compartilhar -->
+    <cache-path name="downloads" path="downloads/" />
+</paths>

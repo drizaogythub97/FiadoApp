@@ -34,8 +34,8 @@
 
     /* Texto */
     --text-primary:   #F0F0F8;
-    --text-secondary: #9898B8;
-    --text-muted:     #585878;
+    --text-secondary: #AEAECE;  /* era #9898B8 — melhor contraste em mobile */
+    --text-muted:     #8484A8;  /* era #585878 — sobe de ~2.5:1 para ~4.8:1 */
 
     /* Sombras */
     --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);

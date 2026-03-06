@@ -1,13 +1,19 @@
 package net.fiadoapp.app;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.webkit.CookieManager;
+import android.webkit.DownloadListener;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -15,17 +21,26 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String APP_URL = "https://fiadoapp.net";
+    private static final String APP_URL   = "https://fiadoapp.net";
+    private static final String AUTHORITY = "net.fiadoapp.app.provider";
 
-    private WebView      webView;
-    private ProgressBar  progressBar;
-    private LinearLayout offlineView;
+    private WebView            webView;
+    private ProgressBar        progressBar;
+    private LinearLayout       offlineView;
     private SwipeRefreshLayout swipeRefresh;
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -39,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         offlineView  = findViewById(R.id.offlineView);
         swipeRefresh = findViewById(R.id.swipeRefresh);
 
-        // ── Sessão persistente: aceita e persiste cookies entre reinicializações ──
+        // ── Sessão persistente ──
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
         cookieManager.setAcceptThirdPartyCookies(webView, true);
@@ -71,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
         s.setMediaPlaybackRequiresUserGesture(false);
 
         webView.setWebViewClient(new WebViewClient() {
-
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 progressBar.setVisibility(View.VISIBLE);
@@ -83,18 +97,13 @@ public class MainActivity extends AppCompatActivity {
             public void onPageFinished(WebView view, String url) {
                 progressBar.setVisibility(View.GONE);
                 swipeRefresh.setRefreshing(false);
-                // Persiste cookies em disco sempre que uma página termina de carregar
                 CookieManager.getInstance().flush();
             }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-                // Mantém navegação dentro do fiadoapp.net na WebView
-                if (url.contains("fiadoapp.net")) {
-                    return false;
-                }
-                // Links externos abrem no navegador
+                if (url.contains("fiadoapp.net")) return false;
                 return true;
             }
 
@@ -114,6 +123,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // ── Download interceptado → busca o arquivo e abre o compartilhar ──
+        webView.setDownloadListener((downloadUrl, userAgent, contentDisposition, mimeType, contentLength) -> {
+            String filename = extractFilename(contentDisposition, downloadUrl, mimeType);
+            String cookies  = CookieManager.getInstance().getCookie(downloadUrl);
+
+            Toast.makeText(this, "Preparando documento...", Toast.LENGTH_SHORT).show();
+
+            new Thread(() -> fetchAndShare(downloadUrl, filename, mimeType, cookies)).start();
+        });
+
         // Restaurar estado ou carregar URL
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState);
@@ -125,7 +144,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Botão "Tentar novamente" na tela offline
         findViewById(R.id.btnRetry).setOnClickListener(v -> {
             if (isOnline()) {
                 offlineView.setVisibility(View.GONE);
@@ -136,30 +154,106 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // ── Ciclo de vida: salva cookies ao entrar em background ──
+    // ── Faz o download do arquivo em background e abre o share sheet ──
+    private void fetchAndShare(String downloadUrl, String filename, String mimeType, String cookies) {
+        try {
+            // Garante pasta de cache
+            File dir = new File(getCacheDir(), "downloads");
+            if (!dir.exists()) dir.mkdirs();
+
+            File outFile = new File(dir, filename);
+
+            // Baixa o arquivo com os cookies da sessão
+            URL url = new URL(downloadUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            if (cookies != null && !cookies.isEmpty()) {
+                conn.setRequestProperty("Cookie", cookies);
+            }
+            conn.setConnectTimeout(15_000);
+            conn.setReadTimeout(30_000);
+            conn.connect();
+
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                showErrorOnUI("Erro ao baixar documento (" + conn.getResponseCode() + ")");
+                return;
+            }
+
+            // Salva em disco
+            try (InputStream in = conn.getInputStream();
+                 FileOutputStream out = new FileOutputStream(outFile)) {
+                byte[] buffer = new byte[8192];
+                int len;
+                while ((len = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, len);
+                }
+            }
+            conn.disconnect();
+
+            // Obtém URI segura via FileProvider
+            Uri fileUri = FileProvider.getUriForFile(this, AUTHORITY, outFile);
+
+            // Abre o compartilhar na UI thread
+            new Handler(Looper.getMainLooper()).post(() -> {
+                Intent share = new Intent(Intent.ACTION_SEND);
+                share.setType(mimeType != null && !mimeType.isEmpty() ? mimeType : "application/pdf");
+                share.putExtra(Intent.EXTRA_STREAM, fileUri);
+                share.putExtra(Intent.EXTRA_SUBJECT, filename);
+                share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(share, "Compartilhar documento"));
+            });
+
+        } catch (Exception e) {
+            showErrorOnUI("Não foi possível preparar o documento.");
+        }
+    }
+
+    // ── Extrai o nome do arquivo do header Content-Disposition ou da URL ──
+    private String extractFilename(String contentDisposition, String url, String mimeType) {
+        // Tenta extrair do Content-Disposition: attachment; filename="arquivo.pdf"
+        if (contentDisposition != null && contentDisposition.contains("filename=")) {
+            String[] parts = contentDisposition.split("filename=");
+            if (parts.length > 1) {
+                String name = parts[1].replace("\"", "").trim();
+                // Remove parâmetros extras (charset etc.)
+                int semi = name.indexOf(';');
+                if (semi > 0) name = name.substring(0, semi).trim();
+                if (!name.isEmpty()) return name;
+            }
+        }
+        // Fallback: usa o último segmento da URL
+        try {
+            String path = new URL(url).getPath();
+            String last = path.substring(path.lastIndexOf('/') + 1);
+            if (!last.isEmpty()) return last;
+        } catch (Exception ignored) {}
+        // Último fallback
+        return "documento_fiadoapp.pdf";
+    }
+
+    private void showErrorOnUI(String msg) {
+        new Handler(Looper.getMainLooper()).post(() ->
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show());
+    }
+
+    // ── Ciclo de vida ──
 
     @Override
     protected void onPause() {
         super.onPause();
-        // Garante que os cookies sejam gravados no disco quando o app vai para segundo plano
         CookieManager.getInstance().flush();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        // Segunda camada de segurança: flush quando o app é completamente ocultado
         CookieManager.getInstance().flush();
     }
 
-    // Navega para trás na WebView ou fecha a Activity
     @Override
     public void onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        if (webView.canGoBack()) webView.goBack();
+        else super.onBackPressed();
     }
 
     @Override
@@ -175,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isOnline() {
         ConnectivityManager cm =
-            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return false;
         NetworkInfo info = cm.getActiveNetworkInfo();
         return info != null && info.isConnected();
