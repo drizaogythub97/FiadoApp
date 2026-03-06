@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Upload via FTP
+    name: Upload via FTPS
     runs-on: ubuntu-latest
 
     steps:
@@ -17,18 +17,24 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: 🚀 Deploy via FTP para Hostinger
+      - name: 🚀 Deploy via FTPS para Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps          # FTPS (FTP com TLS) — resolve o timeout na porta 21
           port: 21
+          security: loose         # Aceita certificado auto-assinado da Hostinger
           server-dir: /public_html/
+          timeout: 60000          # 60s — evita timeout em deploys maiores
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             .github/**
+            android/**
             *.zip
             *.sql
+            README.md
+            PROMPT_FIADOAPP.md
