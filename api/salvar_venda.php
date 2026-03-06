@@ -49,37 +49,60 @@ try {
 
     if ($cliente_id) {
 
-        // Cliente selecionado via autocomplete
+        // ── Cliente existente: atualiza campos preenchidos/alterados ──
         $cliente_id = (int)$cliente_id;
+
+        $stmtAtual = $pdo->prepare("SELECT sobrenome, referencia, telefone FROM clientes WHERE id = ? AND usuario_id = ?");
+        $stmtAtual->execute([$cliente_id, $usuario_id]);
+        $atual = $stmtAtual->fetch(PDO::FETCH_ASSOC);
+
+        if ($atual) {
+            $updates = [];
+            $params  = [];
+
+            if ($sobrenome !== '' && $sobrenome !== ($atual['sobrenome'] ?? '')) {
+                $updates[] = 'sobrenome = ?';
+                $params[]  = ucfirst(strtolower($sobrenome));
+            }
+            if ($referencia !== '' && $referencia !== ($atual['referencia'] ?? '')) {
+                $updates[] = 'referencia = ?';
+                $params[]  = $referencia;
+            }
+            if ($telefone !== '' && $telefone !== ($atual['telefone'] ?? '')) {
+                $updates[] = 'telefone = ?';
+                $params[]  = $telefone;
+            }
+
+            if (!empty($updates)) {
+                $params[] = $cliente_id;
+                $params[] = $usuario_id;
+                $pdo->prepare("UPDATE clientes SET " . implode(', ', $updates) . " WHERE id = ? AND usuario_id = ?")
+                    ->execute($params);
+            }
+        }
 
     } else {
 
-        if (empty($nome) || empty($sobrenome)) {
-            throw new Exception("Nome e sobrenome são obrigatórios.");
+        // ── Novo cliente ──
+        if (empty($nome)) {
+            throw new Exception("O nome do cliente é obrigatório.");
         }
 
-        $nome = ucfirst(strtolower($nome));
-        $sobrenome = ucfirst(strtolower($sobrenome));
+        $nome      = ucfirst(strtolower($nome));
+        $sobrenome = $sobrenome ? ucfirst(strtolower($sobrenome)) : '';
 
+        // Verifica duplicata
         $stmt = $pdo->prepare("
-            SELECT id FROM clientes 
-            WHERE usuario_id = ?
-            AND nome = ?
-            AND sobrenome = ?
+            SELECT id FROM clientes
+            WHERE usuario_id = ? AND nome = ?
+            AND (sobrenome = ? OR (sobrenome IS NULL AND ? = ''))
             AND (
                 (referencia IS NULL AND ? = '')
                 OR referencia = ?
             )
             LIMIT 1
         ");
-
-        $stmt->execute([
-            $usuario_id,
-            $nome,
-            $sobrenome,
-            $referencia,
-            $referencia
-        ]);
+        $stmt->execute([$usuario_id, $nome, $sobrenome, $sobrenome, $referencia, $referencia]);
 
         if ($stmt->fetch()) {
             throw new Exception("Cliente já existe. Selecione-o na lista acima.");
@@ -89,13 +112,12 @@ try {
             INSERT INTO clientes (usuario_id, nome, sobrenome, referencia, telefone)
             VALUES (?, ?, ?, ?, ?)
         ");
-
         $stmt->execute([
             $usuario_id,
             $nome,
-            $sobrenome,
+            $sobrenome ?: null,
             $referencia ?: null,
-            $telefone ?: null
+            $telefone   ?: null
         ]);
 
         $cliente_id = $pdo->lastInsertId();

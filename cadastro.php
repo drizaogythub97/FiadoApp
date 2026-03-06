@@ -58,8 +58,8 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
             </div>
 
             <div class="form-group">
-                <label>Sobrenome <span class="required">*</span></label>
-                <input type="text" id="sobrenome" placeholder="Sobrenome" required>
+                <label>Sobrenome</label>
+                <input type="text" id="sobrenome" placeholder="Sobrenome (opcional)">
             </div>
         </div>
 
