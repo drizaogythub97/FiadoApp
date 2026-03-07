@@ -3,6 +3,8 @@ require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/conexao.php';
 require_once __DIR__ . '/../vendor/fpdf/fpdf.php';
 
+date_default_timezone_set('America/Sao_Paulo');
+
 if (!isset($_SESSION['usuario_id'])) { http_response_code(401); exit; }
 $usuario_id = $_SESSION['usuario_id'];
 
