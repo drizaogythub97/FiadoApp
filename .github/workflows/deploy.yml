@@ -43,6 +43,7 @@ jobs:
           port: 21
           security: loose         # Aceita certificado auto-assinado da Hostinger
           server-dir: /public_html/
+          log-level: verbose      # mostra cada arquivo enviado nos logs do Actions
           timeout: 60000          # 60s — evita timeout em deploys maiores
           exclude: |
             **/.git*
