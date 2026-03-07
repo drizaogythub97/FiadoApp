@@ -100,15 +100,25 @@ function abrirModal({ titulo, mensagem, inputLabel, inputPlaceholder, btnConfirm
 
 // ===============================
 // FUNÇÃO AUXILIAR DE DOWNLOAD
+// Usa fetch + blob para garantir download direto sem abrir nova aba,
+// independente das configurações do visualizador de PDF do browser.
 // ===============================
-function baixarPDF(url) {
+async function baixarPDF(url) {
     if (!url) return;
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = url.split('/').pop();
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+        const response = await fetch(url);
+        const blob     = await response.blob();
+        const blobUrl  = URL.createObjectURL(blob);
+        const link     = document.createElement('a');
+        link.href      = blobUrl;
+        link.download  = url.split('/').pop();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (e) {
+        console.error('Erro ao baixar PDF:', e);
+    }
 }
 
 // ===============================
