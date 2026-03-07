@@ -30,7 +30,7 @@ $voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Histórico do Cliente - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=9">
+<link rel="stylesheet" href="assets/css/style.css?v=10">
 </head>
 
 <body>
@@ -38,8 +38,10 @@ $voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
 <header class="header">
     <div class="header-content">
         <div class="header-brand">
-            <img src="assets/img/logo.png" class="logo">
-            <h1>FiadoApp</h1>
+            <a href="dashboard.php" class="brand-link">
+                <img src="assets/img/logo.png" class="logo">
+                <h1>FiadoApp</h1>
+            </a>
         </div>
         <div class="header-actions">
             <a href="logout.php" class="btn-header-action">↪ Sair</a>
