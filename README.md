@@ -201,8 +201,8 @@ Funcionalidades planejadas para versões futuras:
 - [ ] **SaaS multi-tenant** — isolamento de dados por `usuario_id` já implementado na v1, pronto para evolução
 - [ ] **Notificações push** — alertas de vencimento via Firebase (Android)
 - [ ] **Painel admin** — gerenciamento de contas (`tipo = 'admin'` já mapeado no banco)
-- [ ] **Relatórios exportáveis** — PDF e Excel por período
 - [ ] **Backup automático** — exportação do banco por conta
+- [ ] **App para Sistema IOS** — Criação de versão do aplicativo FiadoApp para sistema IOS
 
 ---
 
