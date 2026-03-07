@@ -17,6 +17,22 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: 🔐 Gerar config/conexao.php a partir dos secrets
+        run: |
+          cat > config/conexao.php << 'EOF'
+          <?php
+          $host = "${{ secrets.DB_HOST }}";
+          $db   = "${{ secrets.DB_NAME }}";
+          $user = "${{ secrets.DB_USER }}";
+          $pass = "${{ secrets.DB_PASS }}";
+          try {
+              $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
+              $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+          } catch (PDOException $e) {
+              die("Erro na conexao: " . $e->getMessage());
+          }
+          EOF
+
       - name: 🚀 Deploy via FTPS para Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:

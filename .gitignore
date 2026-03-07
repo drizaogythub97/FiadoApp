@@ -9,3 +9,6 @@ android/.idea/
 
 # Arquivos Diversos
 PROMPT_FIADOAPP.md
+
+# Credenciais — NUNCA versionar
+config/conexao.php
