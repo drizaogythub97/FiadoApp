@@ -187,5 +187,5 @@ function gerarPDF($pdo, $vendasQuitadas, $totalQuitado, $usuario_id) {
     $fileName = 'comprovante_' . time() . '.pdf';
     $pdf->Output('F', $uploadDir . $fileName);
 
-    return '/uploads/' . $fileName;
+    return '/api/download_pdf.php?file=' . $fileName;
 }

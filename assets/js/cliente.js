@@ -100,25 +100,18 @@ function abrirModal({ titulo, mensagem, inputLabel, inputPlaceholder, btnConfirm
 
 // ===============================
 // FUNÇÃO AUXILIAR DE DOWNLOAD
-// Usa fetch + blob para garantir download direto sem abrir nova aba,
-// independente das configurações do visualizador de PDF do browser.
+// Usa navegação direta por âncora para garantir compatibilidade com
+// Android WebView (DownloadListener), desktop e mobile.
+// Blob URLs NÃO disparam o DownloadListener do Android.
 // ===============================
-async function baixarPDF(url) {
+function baixarPDF(url) {
     if (!url) return;
-    try {
-        const response = await fetch(url);
-        const blob     = await response.blob();
-        const blobUrl  = URL.createObjectURL(blob);
-        const link     = document.createElement('a');
-        link.href      = blobUrl;
-        link.download  = url.split('/').pop();
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-    } catch (e) {
-        console.error('Erro ao baixar PDF:', e);
-    }
+    const a = document.createElement('a');
+    a.href = url;
+    a.style.cssText = 'position:absolute;top:-9999px;left:-9999px;';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 
 // ===============================

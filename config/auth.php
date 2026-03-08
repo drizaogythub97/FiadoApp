@@ -1,5 +1,9 @@
 <?php
 
+// Previne cache de páginas autenticadas no WebView e nos browsers.
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+
 require_once __DIR__ . '/session.php';
 
 if (!isset($_SESSION['usuario_id'])) {

@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         s.setDatabaseEnabled(true);
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
-        s.setCacheMode(WebSettings.LOAD_DEFAULT);
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE);
         s.setAllowFileAccess(false);
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
