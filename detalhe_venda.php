@@ -107,6 +107,10 @@ if($origem === 'cliente' && $cliente_id){
             <button class="btn-success" onclick="marcarComoPaga(<?= $venda['id'] ?>)">
                 ✓ Marcar como Paga
             </button>
+        <?php else: ?>
+            <button class="btn-secondary" onclick="baixarComprovante(<?= $venda['id'] ?>)">
+                📄 Gerar Comprovante
+            </button>
         <?php endif; ?>
         <a href="<?= htmlspecialchars($voltaURL) ?>" class="btn-secondary">← Voltar</a>
     </div>
@@ -140,11 +144,17 @@ async function marcarComoPaga(id){
     });
     const resultado = await response.json();
     if(resultado.status === "sucesso"){
-        window.open(resultado.pdf_url, "_blank");
-        location.reload();
+        showToast("Venda marcada como paga!");
+        await baixarPDF(resultado.pdf_url);
+        setTimeout(() => location.reload(), 1500);
     } else {
         showToast("Erro ao marcar como paga.", "error");
     }
+}
+
+async function baixarComprovante(id) {
+    showToast("Gerando comprovante...");
+    await baixarPDF("/api/gerar_pdf.php?id=" + id);
 }
 </script>
 <div id="toast-container"></div>

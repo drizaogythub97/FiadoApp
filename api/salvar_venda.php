@@ -115,7 +115,7 @@ try {
         $stmt->execute([
             $usuario_id,
             $nome,
-            $sobrenome ?: null,
+            $sobrenome ?: '',
             $referencia ?: null,
             $telefone   ?: null
         ]);

@@ -154,6 +154,9 @@ function renderizarClientes(clientes){
                 <button class="btn-secondary" onclick="historicoCliente(${cliente.cliente_id})">
                     Histórico
                 </button>
+                <button class="btn-secondary" onclick="editarCliente(${cliente.cliente_id})">
+                    ✎ Editar
+                </button>
             </div>
         `;
 
@@ -176,6 +179,11 @@ function detalharCliente(id) {
 function historicoCliente(id) {
     const volta = letraAtiva || "";
     window.location.href = `cliente_historico.php?id=${id}${volta ? '&volta=' + volta : ''}`;
+}
+
+function editarCliente(id) {
+    const volta = letraAtiva || "";
+    window.location.href = `cliente_editar.php?id=${id}${volta ? '&volta=' + volta : ''}`;
 }
 
 // ── Auto-carregar letra da URL (?letra=X) ─────────────────

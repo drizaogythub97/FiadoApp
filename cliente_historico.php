@@ -82,6 +82,8 @@ $voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
     FiadoApp — Todos os direitos reservados para Adriano Cardoso.
 </footer>
 
+<script src="/assets/js/toast.js"></script>
+<script src="/assets/js/cliente.js"></script>
 <script>
 
 const urlParams  = new URLSearchParams(window.location.search);
@@ -151,6 +153,13 @@ async function carregarHistorico(){
                     Total: R$ ${formatarMoeda(venda.valor_total)}
                 </div>
 
+                <div style="margin-top:10px;">
+                    <button class="btn-secondary" style="font-size:13px; padding:8px 14px;"
+                            onclick="gerarComprovanteHistorico(${venda.id})">
+                        📄 Gerar Comprovante
+                    </button>
+                </div>
+
             </div>
         `;
 
@@ -159,6 +168,11 @@ async function carregarHistorico(){
 }
 
 carregarHistorico();
+
+async function gerarComprovanteHistorico(vendaId) {
+    showToast("Gerando comprovante...");
+    await baixarPDF("/api/gerar_pdf.php?id=" + vendaId);
+}
 
 </script>
 
