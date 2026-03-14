@@ -114,14 +114,15 @@ try {
 // ── Funções ────────────────────────────────────────────────────────────────
 
 function registrarPagamento($pdo, $venda, $usuario_id) {
+    $agora = date('Y-m-d H:i:s'); // usa fuso America/Sao_Paulo definido no topo do arquivo
     $stmt = $pdo->prepare("
         INSERT INTO pagamentos (venda_id, data_pagamento, valor_pago, usuario_id)
-        VALUES (?, NOW(), ?, ?)
+        VALUES (?, ?, ?, ?)
     ");
-    $stmt->execute([$venda['id'], $venda['valor_total'], $usuario_id]);
+    $stmt->execute([$venda['id'], $agora, $venda['valor_total'], $usuario_id]);
 
-    $stmt = $pdo->prepare("UPDATE vendas SET status='PAGA', quitado_em=NOW() WHERE id=?");
-    $stmt->execute([$venda['id']]);
+    $stmt = $pdo->prepare("UPDATE vendas SET status='PAGA', quitado_em=? WHERE id=?");
+    $stmt->execute([$agora, $venda['id']]);
 }
 
 function gerarPDF($pdo, $vendasQuitadas, $totalQuitado, $usuario_id) {
