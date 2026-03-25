@@ -1,29 +1,8 @@
 <?php
-require_once __DIR__ . '/config/auth.php'
+$pageTitle = 'Dashboard - FiadoApp';
+require_once __DIR__ . '/config/auth.php';
+require_once __DIR__ . '/includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=12">
-</head>
-<body>
-
-<header class="header">
-    <div class="header-content">
-        <div class="header-brand">
-            <a href="dashboard.php" class="brand-link">
-                <img src="assets/img/logo.png" class="logo">
-                <h1>FiadoApp</h1>
-            </a>
-        </div>
-        <div class="header-actions">
-            <a href="logout.php" class="btn-header-action">↪ Sair</a>
-        </div>
-    </div>
-</header>
 
 <main class="main-container">
 
@@ -36,8 +15,8 @@ require_once __DIR__ . '/config/auth.php'
 
         <!-- CARDS DE MÉTRICAS -->
         <div class="stats-grid" id="statsGrid">
-            <!-- Total a Receber -->
-            <a href="relatorios.php" class="stat-card stat-brand" id="statReceber">
+
+            <a href="/relatorios.php" class="stat-card stat-brand" id="statReceber">
                 <div class="stat-card-header">
                     <span class="stat-icon">💰</span>
                     <span class="stat-label">A Receber</span>
@@ -46,8 +25,7 @@ require_once __DIR__ . '/config/auth.php'
                 <span class="stat-sub">Saldo em aberto</span>
             </a>
 
-            <!-- Vendas Ativas -->
-            <a href="consulta.php" class="stat-card stat-success" id="statAtivas">
+            <a href="/consulta.php" class="stat-card stat-success" id="statAtivas">
                 <div class="stat-card-header">
                     <span class="stat-icon">📋</span>
                     <span class="stat-label">Vendas Ativas</span>
@@ -56,8 +34,7 @@ require_once __DIR__ . '/config/auth.php'
                 <span class="stat-sub">Em andamento</span>
             </a>
 
-            <!-- Inadimplentes -->
-            <a href="inadimplentes.php" class="stat-card stat-danger" id="statInadimplentes">
+            <a href="/inadimplentes.php" class="stat-card stat-danger" id="statInadimplentes">
                 <div class="stat-card-header">
                     <span class="stat-icon">⚠️</span>
                     <span class="stat-label">Inadimplentes</span>
@@ -66,8 +43,7 @@ require_once __DIR__ . '/config/auth.php'
                 <span class="stat-sub">Vencidos sem pagar</span>
             </a>
 
-            <!-- Total de Clientes -->
-            <a href="consulta.php" class="stat-card" id="statClientes">
+            <a href="/consulta.php" class="stat-card" id="statClientes">
                 <div class="stat-card-header">
                     <span class="stat-icon">👥</span>
                     <span class="stat-label">Clientes</span>
@@ -75,6 +51,7 @@ require_once __DIR__ . '/config/auth.php'
                 <span class="stat-value" id="valClientes">—</span>
                 <span class="stat-sub">Cadastrados</span>
             </a>
+
         </div>
 
         <hr class="stats-divider">
@@ -82,7 +59,7 @@ require_once __DIR__ . '/config/auth.php'
         <!-- NAVEGAÇÃO -->
         <div class="nav-grid">
 
-            <a href="cadastro.php" class="nav-card">
+            <a href="/cadastro.php" class="nav-card">
                 <div class="nav-card-icon nav-icon-red">➕</div>
                 <div class="nav-card-text">
                     <span class="nav-card-label">Nova Venda</span>
@@ -90,19 +67,27 @@ require_once __DIR__ . '/config/auth.php'
                 </div>
             </a>
 
-            <a href="consulta.php" class="nav-card">
+            <a href="/consulta.php" class="nav-card">
                 <div class="nav-card-icon nav-icon-blue">🔍</div>
                 <div class="nav-card-text">
-                    <span class="nav-card-label">Consultar Vendas</span>
+                    <span class="nav-card-label">Consultar Clientes</span>
                     <span class="nav-card-desc">Buscar e quitar clientes</span>
                 </div>
             </a>
 
-            <a href="relatorios.php" class="nav-card">
+            <a href="/relatorios.php" class="nav-card">
                 <div class="nav-card-icon nav-icon-green">📊</div>
                 <div class="nav-card-text">
                     <span class="nav-card-label">Relatórios</span>
                     <span class="nav-card-desc">Filtrar e exportar vendas</span>
+                </div>
+            </a>
+
+            <a href="/preferencias.php" class="nav-card">
+                <div class="nav-card-icon" style="background:rgba(100,120,255,0.12);">⚙️</div>
+                <div class="nav-card-text">
+                    <span class="nav-card-label">Preferências</span>
+                    <span class="nav-card-desc">Limites e configurações</span>
                 </div>
             </a>
 
@@ -112,39 +97,30 @@ require_once __DIR__ . '/config/auth.php'
 
 </main>
 
-<footer class="footer">
-    FiadoApp — Todos os direitos reservados para Adriano Cardoso.
-</footer>
-
+<?php
+$footerScripts = <<<'SCRIPT'
 <script>
-async function carregarStats(){
+async function carregarStats() {
     try {
         const res   = await fetch('/api/dashboard_stats.php');
         const stats = await res.json();
+        const fmt   = v => parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 
-        const fmt = v => parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-        document.getElementById('valReceber').textContent      = 'R$ ' + fmt(stats.total_receber);
-        document.getElementById('valAtivas').textContent       = stats.total_ativas;
+        document.getElementById('valReceber').textContent       = 'R$ ' + fmt(stats.total_receber);
+        document.getElementById('valAtivas').textContent        = stats.total_ativas;
         document.getElementById('valInadimplentes').textContent = stats.total_inadimplentes;
-        document.getElementById('valClientes').textContent     = stats.total_clientes;
+        document.getElementById('valClientes').textContent      = stats.total_clientes;
 
-        // Ocultar card de inadimplentes se for zero
-        if(stats.total_inadimplentes === 0){
+        if (stats.total_inadimplentes === 0) {
             document.getElementById('statInadimplentes').classList.remove('stat-danger');
             document.getElementById('statInadimplentes').querySelector('.stat-sub').textContent = 'Todos em dia ✓';
         }
-
     } catch(e) {
-        // Silencioso — não quebrar a tela se a API falhar
         document.querySelectorAll('.stat-value').forEach(el => el.textContent = '—');
     }
 }
-
 carregarStats();
 </script>
-
-<script src="/assets/js/toast.js"></script>
-<div id="toast-container"></div>
-</body>
-</html>
+SCRIPT;
+require_once __DIR__ . '/includes/footer.php';
+?>

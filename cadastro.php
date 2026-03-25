@@ -1,39 +1,30 @@
 <?php
+$pageTitle = 'Nova Venda - FiadoApp';
 require_once __DIR__ . '/config/auth.php';
+require_once __DIR__ . '/config/conexao.php';
 
-$nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
-?>
+$nome_usuario = $_SESSION['usuario_nome'] ?? 'Usuário';
 
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nova Venda - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=12">
+// Pré-preenche dados se ?cliente_id foi passado (botão "Nova Venda" em cliente_detalhe)
+$preCliente   = null;
+$preClienteId = (int)($_GET['cliente_id'] ?? 0);
+if ($preClienteId > 0) {
+    $stmt = $pdo->prepare("SELECT id, nome, sobrenome, referencia, telefone FROM clientes WHERE id = ? AND usuario_id = ?");
+    $stmt->execute([$preClienteId, $_SESSION['usuario_id']]);
+    $preCliente = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+}
+
+$extraHead = <<<'HTML'
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-</head>
-<body>
-
-<header class="header">
-    <div class="header-content">
-        <div class="header-brand">
-            <a href="dashboard.php" class="brand-link">
-                <img src="assets/img/logo.png" class="logo">
-                <h1>FiadoApp</h1>
-            </a>
-        </div>
-        <div class="header-actions">
-            <a href="logout.php" class="btn-header-action">↪ Sair</a>
-        </div>
-    </div>
-</header>
+HTML;
+require_once __DIR__ . '/includes/header.php';
+?>
 
 <main class="main-container">
 
     <div class="welcome-box">
         <h2>Olá, <span class="user-name"><?= htmlspecialchars($nome_usuario) ?></span></h2>
-        <p>Adicione uma nova venda:</p>
+        <p><?= $preCliente ? 'Nova venda para <strong>' . htmlspecialchars($preCliente['nome']) . '</strong>:' : 'Adicione uma nova venda:' ?></p>
     </div>
 
     <section class="form-card">
@@ -48,10 +39,7 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
             <div id="clienteDropdown" class="autocomplete-dropdown"></div>
         </div>
 
-        <div class="novo-cliente-label">
-            Novo cliente? Cadastre abaixo:
-        </div>
-
+        <div class="novo-cliente-label">Novo cliente? Cadastre abaixo:</div>
         <span class="legenda-required">* Campos obrigatórios</span>
 
         <div class="form-row">
@@ -59,7 +47,6 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
                 <label>Nome <span class="required">*</span></label>
                 <input type="text" id="nome" placeholder="Nome do cliente" required>
             </div>
-
             <div class="form-group">
                 <label>Sobrenome</label>
                 <input type="text" id="sobrenome" placeholder="Sobrenome (opcional)">
@@ -85,7 +72,6 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
                     <span class="date-icon">📅</span>
                 </div>
             </div>
-
             <div class="form-group">
                 <label>Data de Vencimento</label>
                 <div class="date-input-wrapper">
@@ -97,12 +83,8 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
 
         <!-- PRODUTOS -->
         <h3 class="section-title">Produtos</h3>
-
         <div id="produtos"></div>
-
-        <button type="button" class="btn-add-produto" onclick="adicionarProduto()">
-            + Adicionar Produto
-        </button>
+        <button type="button" class="btn-add-produto" onclick="adicionarProduto()">+ Adicionar Produto</button>
 
         <!-- TOTAL -->
         <div class="total-box">
@@ -111,35 +93,28 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
 
         <!-- AÇÕES -->
         <div class="form-actions">
-
             <div class="left-actions">
-                <button class="btn-primary" onclick="salvarVenda()">
-                    💾 Salvar Venda
-                </button>
+                <button class="btn-primary" onclick="salvarVenda()">💾 Salvar Venda</button>
             </div>
-
             <div class="right-actions">
-                <a href="dashboard.php" class="btn-secondary" style="text-decoration:none;">
-                    ← Voltar
-                </a>
+                <a href="<?= $preCliente ? '/cliente_detalhe.php?id=' . $preClienteId : '/dashboard.php' ?>"
+                   class="btn-secondary" style="text-decoration:none;">← Voltar</a>
             </div>
-
         </div>
 
     </section>
 
 </main>
 
-<footer class="footer">
-    FiadoApp — Todos os direitos reservados para Adriano Cardoso.
-</footer>
-
+<?php
+// Passa dados do cliente pré-selecionado para o JS
+$preClienteJS = $preCliente ? 'window.PRE_CLIENTE = ' . json_encode($preCliente) . ';' : '';
+$footerScripts = <<<SCRIPT
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-<script src="/assets/js/toast.js"></script>
 <script src="/assets/js/telefone.js"></script>
+<script>$preClienteJS</script>
 <script src="/assets/js/cadastro.js"></script>
-<div id="toast-container"></div>
-
-</body>
-</html>
+SCRIPT;
+require_once __DIR__ . '/includes/footer.php';
+?>

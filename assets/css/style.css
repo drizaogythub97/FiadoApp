@@ -2159,3 +2159,236 @@ span.flatpickr-weekday {
     white-space: nowrap;
 }
 
+/* ==========================
+   HEADER SEARCH GLOBAL
+========================== */
+.header-search {
+    position: relative;
+    flex: 1;
+    max-width: 340px;
+}
+
+.header-search-inner {
+    display: flex;
+    align-items: center;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 0 10px;
+    gap: 8px;
+    transition: border-color 0.15s;
+}
+
+.header-search-inner:focus-within {
+    border-color: var(--brand);
+}
+
+.header-search-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.header-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 8px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    min-width: 0;
+}
+
+.header-search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.header-search-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    z-index: 999;
+    overflow: hidden;
+}
+
+.header-search-item {
+    padding: 10px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.1s;
+}
+
+.header-search-item:last-child {
+    border-bottom: none;
+}
+
+.header-search-item:hover {
+    background: var(--bg-surface-1);
+}
+
+.hs-nome {
+    font-weight: 600;
+}
+
+.hs-ref {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* ==========================
+   SKELETON LOADER
+========================== */
+@keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position:  600px 0; }
+}
+
+.skeleton-card {
+    pointer-events: none;
+}
+
+.skeleton-line {
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(
+        90deg,
+        var(--bg-surface-1) 25%,
+        var(--bg-surface-2) 50%,
+        var(--bg-surface-1) 75%
+    );
+    background-size: 600px 100%;
+    animation: shimmer 1.4s infinite linear;
+}
+
+.skeleton-line-wide   { width: 70%; }
+.skeleton-line-medium { width: 50%; }
+.skeleton-line-narrow { width: 30%; }
+
+/* ==========================
+   BOTÃO WHATSAPP
+========================== */
+.btn-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #25D366;
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.btn-whatsapp:hover {
+    background: #1ebe5d;
+    transform: translateY(-1px);
+}
+
+.btn-whatsapp:active {
+    transform: translateY(0);
+}
+
+.btn-whatsapp-sm {
+    padding: 7px 13px;
+    font-size: 13px;
+}
+
+/* ==========================
+   INADIMPLENTE CARD WRAPPER + AÇÕES
+========================== */
+.inadimplente-card-wrapper {
+    margin-bottom: 10px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    transition: border-color 0.2s;
+}
+
+.inadimplente-card-wrapper:hover {
+    border-color: var(--border-strong);
+}
+
+/* Remove margin/border from the inner card since wrapper handles it */
+.inadimplente-card-wrapper .inadimplente-card {
+    margin-bottom: 0;
+    border: none;
+    border-radius: 0;
+}
+
+.inadimplente-card-wrapper .inadimplente-card:hover {
+    border: none;
+}
+
+.inadimplente-actions {
+    padding: 10px 14px;
+    background: var(--bg-surface-1);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ==========================
+   NOVA VENDA BUTTON (cards de cliente)
+========================== */
+.btn-nova-venda {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    color: var(--brand);
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.btn-nova-venda:hover {
+    background: var(--brand);
+    color: #fff;
+}
+
+/* ==========================
+   ALPHABET TODOS BUTTON
+========================== */
+.alphabet-todos {
+    background: var(--bg-surface-1) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.alphabet-todos.active,
+.alphabet-todos:hover {
+    background: var(--brand) !important;
+    color: #fff !important;
+    border-color: var(--brand) !important;
+}
+

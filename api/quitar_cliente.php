@@ -75,14 +75,16 @@ try {
         }
 
         if ($valorPago < $totalAberto) {
-            $restante = $totalAberto - $valorPago;
+            $restante    = $totalAberto - $valorPago;
+            $hoje        = date('Y-m-d');                        // usa fuso America/Sao_Paulo do topo
+            $vencRestant = date('Y-m-d', strtotime('+30 days')); // idem
 
             $stmt = $pdo->prepare("
                 INSERT INTO vendas
                 (cliente_id, data_compra, data_vencimento, valor_total, status, usuario_id)
-                VALUES (?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, 'ATIVA', ?)
+                VALUES (?, ?, ?, ?, 'ATIVA', ?)
             ");
-            $stmt->execute([$cliente_id, $restante, $usuario_id]);
+            $stmt->execute([$cliente_id, $hoje, $vencRestant, $restante, $usuario_id]);
             $novaVendaId = $pdo->lastInsertId();
 
             $stmt = $pdo->prepare("

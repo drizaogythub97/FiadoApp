@@ -10,8 +10,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $email = trim($_POST['email'] ?? '');
     $senha = $_POST['senha'] ?? '';
 
+    $lgpd = $_POST['lgpd'] ?? '';
+
     if(!$tipo || !$nome || !$email || !$senha){
         $mensagem = "Preencha todos os campos.";
+    } elseif (!$lgpd) {
+        $mensagem = "Você precisa aceitar a Política de Privacidade para criar uma conta.";
     } else {
 
         $hash = password_hash($senha, PASSWORD_DEFAULT);
@@ -40,7 +44,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Criar Conta - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=12">
+<link rel="stylesheet" href="assets/css/style.css?v=13">
 </head>
 <body>
 
@@ -80,6 +84,17 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             <div class="form-group">
                 <label>Senha</label>
                 <input type="password" name="senha" placeholder="Crie uma senha" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom:6px;">
+                <label style="display:flex; align-items:flex-start; gap:10px; font-size:13px; cursor:pointer; font-weight:400; color:var(--text-secondary);">
+                    <input type="checkbox" name="lgpd" value="1" required style="margin-top:2px; flex-shrink:0; width:16px; height:16px; accent-color:var(--brand);">
+                    <span>
+                        Li e aceito a
+                        <a href="/privacidade.php" target="_blank" style="color:var(--brand); text-decoration:underline;">Política de Privacidade</a>
+                        e concordo com o tratamento dos meus dados conforme a LGPD.
+                    </span>
+                </label>
             </div>
 
             <div class="stacked-actions">

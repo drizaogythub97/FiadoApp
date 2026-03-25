@@ -186,8 +186,9 @@ try {
     $pdo->commit();
 
     echo json_encode([
-        "status" => "sucesso",
-        "mensagem" => "Venda cadastrada com sucesso!"
+        "status"     => "sucesso",
+        "mensagem"   => "Venda cadastrada com sucesso!",
+        "cliente_id" => (int)$cliente_id
     ]);
 
 } catch (Exception $e) {

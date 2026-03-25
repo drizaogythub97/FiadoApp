@@ -1,10 +1,10 @@
 <?php
+$pageTitle = 'Inadimplentes - FiadoApp';
 require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/config/conexao.php';
 
 $usuario_id = $_SESSION['usuario_id'];
 
-// Buscar clientes com vendas vencidas (não pagas)
 $stmt = $pdo->prepare("
     SELECT
         c.id             AS cliente_id,
@@ -29,30 +29,9 @@ $stmt->execute([':uid' => $usuario_id]);
 $inadimplentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totalDevidoGeral = array_sum(array_column($inadimplentes, 'total_devido'));
-?>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inadimplentes - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=12">
-</head>
-<body>
 
-<header class="header">
-    <div class="header-content">
-        <div class="header-brand">
-            <a href="dashboard.php" class="brand-link">
-                <img src="assets/img/logo.png" class="logo">
-                <h1>FiadoApp</h1>
-            </a>
-        </div>
-        <div class="header-actions">
-            <a href="logout.php" class="btn-header-action">↪ Sair</a>
-        </div>
-    </div>
-</header>
+require_once __DIR__ . '/includes/header.php';
+?>
 
 <main class="main-container">
 
@@ -63,8 +42,8 @@ $totalDevidoGeral = array_sum(array_column($inadimplentes, 'total_devido'));
 
     <section class="form-card">
 
-        <?php if(empty($inadimplentes)): ?>
-            <div style="text-align:center; padding: 32px 0; color:var(--text-muted);">
+        <?php if (empty($inadimplentes)): ?>
+            <div style="text-align:center; padding:32px 0; color:var(--text-muted);">
                 <div style="font-size:36px; margin-bottom:12px;">✅</div>
                 <p style="font-size:15px; font-weight:600; color:var(--text-secondary);">Nenhuma inadimplência encontrada!</p>
                 <p style="font-size:13px; margin-top:4px;">Todos os clientes estão em dia.</p>
@@ -82,57 +61,82 @@ $totalDevidoGeral = array_sum(array_column($inadimplentes, 'total_devido'));
             </div>
 
             <!-- LISTA -->
-            <?php foreach($inadimplentes as $c): ?>
+            <?php foreach ($inadimplentes as $c): ?>
             <?php
                 $nomeCompleto = htmlspecialchars($c['nome']);
-                if($c['sobrenome'])  $nomeCompleto .= ' ' . htmlspecialchars($c['sobrenome']);
+                if ($c['sobrenome']) $nomeCompleto .= ' ' . htmlspecialchars($c['sobrenome']);
                 $diasAtraso = (int)$c['dias_atraso'];
-                if($diasAtraso <= 7)       $atrasoBadge = "badge-parcial";
-                elseif($diasAtraso <= 30)  $atrasoBadge = "badge-ativa";
-                else                       $atrasoBadge = "badge-ativa";
+
+                // Monta link WhatsApp se tiver telefone
+                $whatsappBtn = '';
+                if (!empty($c['telefone'])) {
+                    $digitos    = preg_replace('/\D/', '', $c['telefone']);
+                    $valorFmt   = 'R$ ' . number_format($c['total_devido'], 2, ',', '.');
+                    $nomeMsg    = $c['nome'];
+                    $msg        = "Olá, {$nomeMsg}! Passando para lembrar que você tem {$valorFmt} em aberto aqui conosco";
+                    $msg       .= " (vencido há {$diasAtraso} dia" . ($diasAtraso > 1 ? 's' : '') . ").";
+                    $msg       .= " Qualquer dúvida, estou à disposição! 😊";
+                    $waLink     = 'https://wa.me/55' . $digitos . '?text=' . rawurlencode($msg);
+                    $whatsappBtn = '<a href="' . htmlspecialchars($waLink) . '" class="btn-whatsapp btn-whatsapp-sm" onclick="abrirWhatsApp(event, this)">📲 WhatsApp</a>';
+                }
             ?>
-            <a href="cliente_detalhe.php?id=<?= $c['cliente_id'] ?>&volta=inadimplentes" class="inadimplente-card">
-                <div class="inadimplente-info">
-                    <span class="inadimplente-nome">
-                        <?= $nomeCompleto ?>
-                        <?php if($c['referencia']): ?>
-                            <span style="color:var(--text-muted); font-weight:400; font-size:14px;">
-                                (<?= htmlspecialchars($c['referencia']) ?>)
-                            </span>
-                        <?php endif; ?>
-                    </span>
-                    <span class="inadimplente-meta">
-                        <?= $c['total_vendas_vencidas'] ?> venda<?= $c['total_vendas_vencidas'] > 1 ? 's' : '' ?> vencida<?= $c['total_vendas_vencidas'] > 1 ? 's' : '' ?>
-                        <?php if($c['telefone']): ?>
-                            &nbsp;·&nbsp; 📞 <?= htmlspecialchars($c['telefone']) ?>
-                        <?php endif; ?>
-                    </span>
+            <div class="inadimplente-card-wrapper">
+                <a href="/cliente_detalhe.php?id=<?= $c['cliente_id'] ?>&volta=inadimplentes" class="inadimplente-card">
+                    <div class="inadimplente-info">
+                        <span class="inadimplente-nome">
+                            <?= $nomeCompleto ?>
+                            <?php if ($c['referencia']): ?>
+                                <span style="color:var(--text-muted); font-weight:400; font-size:14px;">
+                                    (<?= htmlspecialchars($c['referencia']) ?>)
+                                </span>
+                            <?php endif; ?>
+                        </span>
+                        <span class="inadimplente-meta">
+                            <?= $c['total_vendas_vencidas'] ?> venda<?= $c['total_vendas_vencidas'] > 1 ? 's' : '' ?> vencida<?= $c['total_vendas_vencidas'] > 1 ? 's' : '' ?>
+                            <?php if ($c['telefone']): ?>
+                                &nbsp;·&nbsp; 📞 <?= htmlspecialchars($c['telefone']) ?>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <div class="inadimplente-right">
+                        <span class="inadimplente-valor">
+                            R$ <?= number_format($c['total_devido'], 2, ',', '.') ?>
+                        </span>
+                        <span class="atraso-badge">
+                            ⏰ <?= $diasAtraso ?> dia<?= $diasAtraso > 1 ? 's' : '' ?> em atraso
+                        </span>
+                    </div>
+                </a>
+                <?php if ($whatsappBtn): ?>
+                <div class="inadimplente-actions">
+                    <?= $whatsappBtn ?>
                 </div>
-                <div class="inadimplente-right">
-                    <span class="inadimplente-valor">
-                        R$ <?= number_format($c['total_devido'], 2, ',', '.') ?>
-                    </span>
-                    <span class="atraso-badge">
-                        ⏰ <?= $diasAtraso ?> dia<?= $diasAtraso > 1 ? 's' : '' ?> em atraso
-                    </span>
-                </div>
-            </a>
+                <?php endif; ?>
+            </div>
             <?php endforeach; ?>
 
         <?php endif; ?>
 
         <div style="margin-top:20px;">
-            <a href="dashboard.php" class="btn-secondary" style="text-decoration:none;">← Voltar ao Dashboard</a>
+            <a href="/dashboard.php" class="btn-secondary" style="text-decoration:none;">← Voltar ao Dashboard</a>
         </div>
 
     </section>
 
 </main>
 
-<footer class="footer">
-    FiadoApp — Todos os direitos reservados para Adriano Cardoso.
-</footer>
-
-<div id="toast-container"></div>
-</body>
-</html>
+<?php
+$footerScripts = <<<'SCRIPT'
+<script>
+/**
+ * Abre link WhatsApp via window.location.href para funcionar no WebView Android.
+ * O shouldOverrideUrlLoading do MainActivity intercepta wa.me e abre via Intent.
+ */
+function abrirWhatsApp(e, el) {
+    e.preventDefault();
+    window.location.href = el.href;
+}
+</script>
+SCRIPT;
+require_once __DIR__ . '/includes/footer.php';
+?>

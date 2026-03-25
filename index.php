@@ -9,8 +9,31 @@ if (isset($_SESSION['usuario_id'])) {
 }
 
 $mensagem = "";
+$bloqueado = false;
 
-if($_SERVER['REQUEST_METHOD'] === 'POST'){
+// ── Rate limiting: máximo 5 tentativas em 10 minutos ──────────────────────
+$agora = time();
+if (!isset($_SESSION['login_tentativas'])) {
+    $_SESSION['login_tentativas'] = 0;
+    $_SESSION['login_primeira_tentativa'] = $agora;
+}
+
+// Reseta janela se passaram mais de 10 minutos
+if (($agora - ($_SESSION['login_primeira_tentativa'] ?? $agora)) > 600) {
+    $_SESSION['login_tentativas'] = 0;
+    $_SESSION['login_primeira_tentativa'] = $agora;
+}
+
+$tentativasRestantes = max(0, 5 - (int)$_SESSION['login_tentativas']);
+$segundosRestantes   = max(0, 600 - ($agora - (int)$_SESSION['login_primeira_tentativa']));
+
+if ((int)$_SESSION['login_tentativas'] >= 5) {
+    $bloqueado  = true;
+    $minutosMsg = ceil($segundosRestantes / 60);
+    $mensagem   = "Muitas tentativas. Aguarde {$minutosMsg} minuto(s) para tentar novamente.";
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$bloqueado) {
 
     $email = $_POST['email'] ?? '';
     $senha = $_POST['senha'] ?? '';
@@ -20,17 +43,30 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if($usuario && password_verify($senha, $usuario['senha'])){
+    if ($usuario && password_verify($senha, $usuario['senha'])) {
 
-        $_SESSION['usuario_id'] = $usuario['id'];
+        // Sucesso: limpa contador e inicia sessão
+        $_SESSION['login_tentativas'] = 0;
+        $_SESSION['usuario_id']   = $usuario['id'];
         $_SESSION['usuario_nome'] = $usuario['nome'];
         $_SESSION['usuario_tipo'] = $usuario['tipo'];
+
+        // Regenera ID de sessão para evitar fixation
+        session_regenerate_id(true);
 
         header("Location: dashboard.php");
         exit;
 
     } else {
-        $mensagem = "Email ou senha inválidos.";
+        $_SESSION['login_tentativas']++;
+        if ($_SESSION['login_tentativas'] === 1) {
+            $_SESSION['login_primeira_tentativa'] = $agora;
+        }
+        $restantes = max(0, 5 - (int)$_SESSION['login_tentativas']);
+        $mensagem  = $restantes > 0
+            ? "Email ou senha inválidos. {$restantes} tentativa(s) restante(s)."
+            : "Muitas tentativas. Aguarde 10 minutos para tentar novamente.";
+        if ($restantes === 0) $bloqueado = true;
     }
 }
 ?>
@@ -70,11 +106,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             </div>
 
             <div class="stacked-actions">
-                <button type="submit" class="btn-primary">Entrar</button>
+                <button type="submit" class="btn-primary" <?= $bloqueado ? 'disabled' : '' ?>>Entrar</button>
                 <a href="cadastro_usuario.php" class="btn-secondary">Criar Conta</a>
             </div>
 
         </form>
+
+        <p style="text-align:center; margin-top:16px; font-size:12px;">
+            <a href="privacidade.php" style="color:var(--text-muted); text-decoration:none;">Política de Privacidade</a>
+        </p>
 
     </div>
 </div>

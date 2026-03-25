@@ -103,7 +103,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
+
+                // Permite navegação interna do app
                 if (url.contains("fiadoapp.net")) return false;
+
+                // Abre WhatsApp via Intent externo (wa.me ou deep link whatsapp://)
+                // Isso evita que o WebView tente navegar para o wa.me e quebre o fluxo
+                if (url.contains("wa.me") || url.startsWith("whatsapp://")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this,
+                            "WhatsApp não encontrado no dispositivo.", Toast.LENGTH_SHORT).show();
+                    }
+                    return true; // Interceptado: WebView não navega
+                }
+
+                // Bloqueia qualquer outro domínio externo
                 return true;
             }
 
