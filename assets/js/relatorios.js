@@ -1,50 +1,3 @@
-// ── Year picker (reutiliza a função de cadastro.js via cliente.js já carregado) ──
-function setupYearPicker(fp) {
-    const currentMonth = fp.calendarContainer.querySelector('.flatpickr-current-month');
-    if (!currentMonth) return;
-    const btn = document.createElement('span');
-    btn.className = 'fp-year-btn';
-    btn.textContent = fp.currentYear;
-    currentMonth.appendChild(btn);
-    const sync = () => { btn.textContent = fp.currentYear; };
-    fp.config.onMonthChange.push(sync);
-    fp.config.onYearChange.push(sync);
-    btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        document.querySelectorAll('.fp-year-list').forEach(el => el.remove());
-        const cur = fp.currentYear;
-        const list = document.createElement('div');
-        list.className = 'fp-year-list';
-        for (let y = cur + 5; y >= cur - 15; y--) {
-            const item = document.createElement('div');
-            item.className = 'fp-year-item' + (y === cur ? ' fp-year-active' : '');
-            item.textContent = y;
-            item.addEventListener('click', function(ev) {
-                ev.stopPropagation();
-                fp.changeYear(y);
-                btn.textContent = y;
-                list.remove();
-            });
-            list.appendChild(item);
-        }
-        fp.calendarContainer.style.position = 'relative';
-        fp.calendarContainer.appendChild(list);
-        const btnRect = btn.getBoundingClientRect();
-        const calRect = fp.calendarContainer.getBoundingClientRect();
-        list.style.left = (btnRect.left - calRect.left) + 'px';
-        list.style.top  = (btnRect.bottom - calRect.top + 4) + 'px';
-        list.style.position = 'absolute';
-        const active = list.querySelector('.fp-year-active');
-        if (active) setTimeout(() => active.scrollIntoView({ block: 'center' }), 10);
-        setTimeout(() => {
-            document.addEventListener('click', function close() {
-                list.remove();
-                document.removeEventListener('click', close);
-            }, { once: true });
-        }, 50);
-    });
-}
-
 // ── Flatpickr nos filtros de data ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
     const fpOpts = {
@@ -52,8 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dateFormat: 'Y-m-d',
         altInput: true,
         altFormat: 'd/m/Y',
-        allowInput: false,
-        onReady: function() { setupYearPicker(this); }
+        allowInput: false
     };
     flatpickr('#data_inicio', fpOpts);
     flatpickr('#data_fim',    fpOpts);
