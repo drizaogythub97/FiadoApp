@@ -1856,20 +1856,87 @@ body {
     font-family: 'Inter', sans-serif !important;
 }
 
-.flatpickr-months .flatpickr-month,
+/* Header — barra de navegação */
+.flatpickr-months {
+    position: relative !important;
+    background: var(--bg-surface-1) !important;
+    border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+    padding: 4px 0 !important;
+    align-items: center !important;
+}
+
+.flatpickr-months .flatpickr-month {
+    background: transparent !important;
+    border-radius: 0 !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+}
+
+/* Mês centralizado — apenas nome + seta dropdown */
+.flatpickr-current-month {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: static !important;
+    width: 100% !important;
+    padding: 0 !important;
+    font-size: 14px !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    color: var(--text-primary) !important;
+    background: transparent !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    border: none !important;
+    padding: 2px 4px !important;
+    cursor: pointer !important;
+    appearance: auto !important;
+}
+
+/* Seletor de ano — canto superior direito do calendário */
+.flatpickr-current-month .numInputWrapper {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 62px !important;
+    background: var(--bg-surface-2) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 6px !important;
+    padding: 2px 4px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.flatpickr-current-month input.cur-year {
+    color: var(--text-primary) !important;
+    background: transparent !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    width: 44px !important;
+    border: none !important;
+    padding: 0 2px !important;
+    text-align: center !important;
+}
+
+.numInputWrapper span.arrowUp,
+.numInputWrapper span.arrowDown {
+    opacity: 0.5 !important;
+}
+.numInputWrapper:hover span.arrowUp,
+.numInputWrapper:hover span.arrowDown {
+    opacity: 1 !important;
+}
+
 .flatpickr-weekdays,
 span.flatpickr-weekday {
     background: var(--bg-surface-1) !important;
     color: var(--text-secondary) !important;
     fill: var(--text-secondary) !important;
-    border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
-}
-
-.flatpickr-current-month .flatpickr-monthDropdown-months,
-.flatpickr-current-month input.cur-year {
-    color: var(--text-primary) !important;
-    background: transparent !important;
-    font-weight: 600 !important;
 }
 
 .flatpickr-day {
@@ -1914,10 +1981,6 @@ span.flatpickr-weekday {
     fill: var(--brand) !important;
 }
 
-.numInputWrapper span.arrowUp,
-.numInputWrapper span.arrowDown {
-    border-color: var(--border-subtle) !important;
-}
 
 /* ==========================
    ITEM DE VENDA — total parcial
