@@ -71,6 +71,13 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 
+    <div class="form-group">
+        <label for="limite_credito">Limite de Crédito <span style="color:var(--text-muted); font-weight:400;">(opcional — deixe vazio para sem limite)</span></label>
+        <input type="number" id="limite_credito" min="0" step="0.01"
+               placeholder="Ex: 300,00"
+               value="<?= htmlspecialchars($cliente['limite_credito'] ?? '') ?>">
+    </div>
+
     <div class="stacked-actions" style="margin-top:24px;">
         <button class="btn-success" onclick="salvarEdicao()">✓ Salvar Alterações</button>
         <a href="/<?= htmlspecialchars($voltaURL) ?>" class="btn-secondary" style="text-decoration:none; text-align:center;">← Voltar</a>
@@ -112,9 +119,10 @@ async function salvarEdicao() {
     const dados = {
         cliente_id: CLIENTE_ID,
         nome,
-        sobrenome:  document.getElementById('sobrenome').value.trim(),
-        referencia: document.getElementById('referencia').value.trim(),
-        telefone:   document.getElementById('telefone').value.trim(),
+        sobrenome:      document.getElementById('sobrenome').value.trim(),
+        referencia:     document.getElementById('referencia').value.trim(),
+        telefone:       document.getElementById('telefone').value.trim(),
+        limite_credito: document.getElementById('limite_credito').value.trim(),
     };
 
     try {

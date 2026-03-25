@@ -33,6 +33,7 @@ try {
     $telefone = trim($_POST["telefone"] ?? '');
     $data_compra = $_POST["data_compra"] ?? null;
     $data_vencimento = $_POST["data_vencimento"] ?? null;
+    $observacao  = trim($_POST["observacao"] ?? '');
     $itens = $_POST["itens"] ?? [];
 
     if (empty($data_compra)) {
@@ -128,16 +129,17 @@ try {
     // =========================
 
     $stmt = $pdo->prepare("
-        INSERT INTO vendas 
-        (cliente_id, data_compra, data_vencimento, valor_total, status, usuario_id) 
-        VALUES (?, ?, ?, 0, 'ATIVA', ?)
+        INSERT INTO vendas
+        (cliente_id, data_compra, data_vencimento, valor_total, status, usuario_id, observacao)
+        VALUES (?, ?, ?, 0, 'ATIVA', ?, ?)
     ");
 
     $stmt->execute([
         $cliente_id,
         $data_compra,
         $data_vencimento,
-        $usuario_id
+        $usuario_id,
+        $observacao ?: null
     ]);
 
     $venda_id = $pdo->lastInsertId();

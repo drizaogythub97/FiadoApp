@@ -91,6 +91,12 @@ require_once __DIR__ . '/includes/header.php';
             Total Geral: R$ <span id="totalGeral">0,00</span>
         </div>
 
+        <!-- OBSERVAÇÃO -->
+        <div class="form-group" style="margin-top:16px;">
+            <label>Observação <span style="color:var(--text-muted); font-weight:400;">(opcional)</span></label>
+            <textarea id="observacao" rows="3" placeholder="Ex: Entregue em casa, combinou pagar na sexta..."></textarea>
+        </div>
+
         <!-- AÇÕES -->
         <div class="form-actions">
             <div class="left-actions">

@@ -13,10 +13,13 @@ $usuario_id = $_SESSION['usuario_id'];
 $input = json_decode(file_get_contents('php://input'), true);
 
 $cliente_id = isset($input['cliente_id']) ? (int)$input['cliente_id'] : 0;
-$nome       = trim($input['nome']       ?? '');
-$sobrenome  = trim($input['sobrenome']  ?? '');
-$referencia = trim($input['referencia'] ?? '');
-$telefone   = trim($input['telefone']   ?? '');
+$nome           = trim($input['nome']       ?? '');
+$sobrenome      = trim($input['sobrenome']  ?? '');
+$referencia     = trim($input['referencia'] ?? '');
+$telefone       = trim($input['telefone']   ?? '');
+$limite_credito = isset($input['limite_credito']) && $input['limite_credito'] !== ''
+    ? (float)$input['limite_credito']
+    : null;
 
 if ($cliente_id <= 0) {
     echo json_encode(['status' => 'erro', 'mensagem' => 'Cliente inválido.']);
@@ -42,7 +45,7 @@ try {
 
     $stmt = $pdo->prepare("
         UPDATE clientes
-        SET nome = ?, sobrenome = ?, referencia = ?, telefone = ?
+        SET nome = ?, sobrenome = ?, referencia = ?, telefone = ?, limite_credito = ?
         WHERE id = ? AND usuario_id = ?
     ");
     $stmt->execute([
@@ -50,6 +53,7 @@ try {
         $sobrenomeFormatado,
         $referencia ?: null,
         $telefone   ?: null,
+        $limite_credito,
         $cliente_id,
         $usuario_id
     ]);

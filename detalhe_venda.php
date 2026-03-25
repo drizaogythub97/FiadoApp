@@ -62,6 +62,9 @@ require_once __DIR__ . '/includes/header.php';
         <p><strong>Data de Vencimento</strong><?= date('d/m/Y', strtotime($venda['data_vencimento'])) ?></p>
         <?php endif; ?>
         <p><strong>Valor Total</strong>R$ <?= number_format($venda['valor_total'], 2, ',', '.') ?></p>
+        <?php if (!empty($venda['observacao'])): ?>
+        <p><strong>Observação</strong><?= nl2br(htmlspecialchars($venda['observacao'])) ?></p>
+        <?php endif; ?>
     </div>
 
     <hr>

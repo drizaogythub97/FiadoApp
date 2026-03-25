@@ -154,6 +154,7 @@ async function salvarVenda() {
         telefone:        document.getElementById("telefone").value,
         data_compra:     document.getElementById("data_compra").value,
         data_vencimento: document.getElementById("data_vencimento").value,
+        observacao:      document.getElementById("observacao")?.value?.trim() || '',
         itens:           produtos
     };
 

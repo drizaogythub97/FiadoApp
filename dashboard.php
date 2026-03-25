@@ -102,6 +102,14 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </a>
 
+            <a href="/analytics.php" class="nav-card">
+                <div class="nav-card-icon" style="background:rgba(59,130,246,0.12);">📈</div>
+                <div class="nav-card-text">
+                    <span class="nav-card-label">Analytics</span>
+                    <span class="nav-card-desc">Gráficos e insights</span>
+                </div>
+            </a>
+
             <a href="/preferencias.php" class="nav-card">
                 <div class="nav-card-icon" style="background:rgba(100,120,255,0.12);">⚙️</div>
                 <div class="nav-card-text">
