@@ -1,5 +1,33 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+    // ── Flatpickr — Calendário personalizado ──────────────────────────────
+    const fpOpts = {
+        locale: 'pt',
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        allowInput: false,
+        disableMobile: false,
+    };
+
+    const fpCompra = flatpickr("#data_compra", {
+        ...fpOpts,
+        onChange: function(selectedDates) {
+            if (!selectedDates[0]) return;
+            // Auto-preenche vencimento com +30 dias, mas preserva edição manual
+            const venc = new Date(selectedDates[0]);
+            venc.setDate(venc.getDate() + 30);
+            fpVencimento.setDate(venc, true);
+        }
+    });
+
+    const fpVencimento = flatpickr("#data_vencimento", { ...fpOpts });
+
+    // ── Máscara de telefone ───────────────────────────────────────────────
+    const telInput = document.getElementById("telefone");
+    if (telInput) aplicarMascaraTelefone(telInput);
+
+    // ── Autocomplete de cliente ───────────────────────────────────────────
     const clienteBusca = document.getElementById("clienteBusca");
     const dropdown = document.getElementById("clienteDropdown");
     const clienteIdInput = document.getElementById("cliente_id");
@@ -41,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("nome").value = cliente.nome;
                 document.getElementById("sobrenome").value = cliente.sobrenome;
                 document.getElementById("referencia").value = cliente.referencia || "";
-                document.getElementById("telefone").value = cliente.telefone || "";
+                preencherTelefone(document.getElementById("telefone"), cliente.telefone || "");
 
                 dropdown.style.display = "none";
                 showToast("Cliente selecionado com sucesso!");

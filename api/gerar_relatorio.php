@@ -21,6 +21,9 @@ $data_inicio = $input['data_inicio'] ?? null;
 $data_fim    = $input['data_fim']    ?? null;
 $status      = $input['status']      ?? null;
 $inicial     = $input['inicial']     ?? null;
+$ids         = $input['ids']         ?? ($_GET['ids'] ?? []);
+if (!is_array($ids)) $ids = [];
+$ids = array_filter(array_map('intval', $ids));
 
 // ── Query base ──
 $sql = "
@@ -36,12 +39,41 @@ if ($data_inicio) { $sql .= " AND v.data_compra >= :data_inicio"; $params[':data
 if ($data_fim)    { $sql .= " AND v.data_compra <= :data_fim";    $params[':data_fim']    = $data_fim; }
 if ($status)      { $sql .= " AND v.status = :status";            $params[':status']      = $status; }
 if ($inicial)     { $sql .= " AND c.nome LIKE :inicial";           $params[':inicial']     = strtoupper($inicial) . '%'; }
+if (!empty($ids)) {
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $sql .= " AND v.id IN ($placeholders)";
+}
 
 $sql .= " ORDER BY v.data_compra DESC";
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$allParams = array_values($params);
+if (!empty($ids)) $allParams = array_merge($allParams, array_values($ids));
+
+// Executa com params nomeados + posicionais (reescreve usando só posicionais)
+$sqlFinal = $sql;
+$positional = [];
+$sqlFinal = preg_replace_callback('/:(\w+)/', function($m) use (&$params, &$positional) {
+    $positional[] = $params[':' . $m[1]];
+    return '?';
+}, $sqlFinal);
+if (!empty($ids)) foreach ($ids as $id) $positional[] = $id;
+
+$stmt = $pdo->prepare($sqlFinal);
+$stmt->execute($positional);
 $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ── Busca itens de cada venda ──
+$itensMap = [];
+if (!empty($resultados)) {
+    $vendaIds  = array_column($resultados, 'id');
+    $ph        = implode(',', array_fill(0, count($vendaIds), '?'));
+    $stmtItens = $pdo->prepare("SELECT * FROM itens_venda WHERE venda_id IN ($ph) ORDER BY venda_id, id");
+    $stmtItens->execute($vendaIds);
+    foreach ($stmtItens->fetchAll(PDO::FETCH_ASSOC) as $item) {
+        $itensMap[$item['venda_id']][] = $item;
+    }
+}
 
 // ============================================================
 // CSV
@@ -51,17 +83,37 @@ if ($tipoExportacao === 'csv') {
     header('Content-Disposition: attachment; filename="relatorio_fiadoapp_' . date('Ymd') . '.csv"');
     $out = fopen("php://output", "w");
     fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
-    fputcsv($out, ['#', 'Cliente', 'Referencia', 'Data Compra', 'Vencimento', 'Valor (R$)', 'Status'], ';');
+    fputcsv($out, ['#', 'Cliente', 'Referencia', 'Data Compra', 'Vencimento', 'Status', 'Total Venda (R$)', 'Item', 'Qtd', 'Valor Unit. (R$)', 'Subtotal Item (R$)'], ';');
     foreach ($resultados as $i => $r) {
-        fputcsv($out, [
-            $i + 1,
-            $r['nome'] . ' ' . $r['sobrenome'],
-            $r['referencia'],
-            date('d/m/Y', strtotime($r['data_compra'])),
-            date('d/m/Y', strtotime($r['data_vencimento'])),
-            number_format($r['valor_total'], 2, ',', '.'),
-            $r['status']
-        ], ';');
+        $itens = $itensMap[$r['id']] ?? [];
+        if (empty($itens)) {
+            fputcsv($out, [
+                $i + 1,
+                $r['nome'] . ' ' . $r['sobrenome'],
+                $r['referencia'],
+                date('d/m/Y', strtotime($r['data_compra'])),
+                date('d/m/Y', strtotime($r['data_vencimento'])),
+                $r['status'],
+                number_format($r['valor_total'], 2, ',', '.'),
+                '', '', '', ''
+            ], ';');
+        } else {
+            foreach ($itens as $j => $item) {
+                fputcsv($out, [
+                    $j === 0 ? $i + 1 : '',
+                    $j === 0 ? $r['nome'] . ' ' . $r['sobrenome'] : '',
+                    $j === 0 ? $r['referencia'] : '',
+                    $j === 0 ? date('d/m/Y', strtotime($r['data_compra'])) : '',
+                    $j === 0 ? date('d/m/Y', strtotime($r['data_vencimento'])) : '',
+                    $j === 0 ? $r['status'] : '',
+                    $j === 0 ? number_format($r['valor_total'], 2, ',', '.') : '',
+                    $item['descricao'],
+                    $item['quantidade'],
+                    number_format($item['valor_unitario'], 2, ',', '.'),
+                    number_format($item['valor_total'], 2, ',', '.'),
+                ], ';');
+            }
+        }
     }
     fclose($out);
     exit;
@@ -124,26 +176,28 @@ if ($tipoExportacao === 'pdf') {
     }
     $pdf->Ln(28);
 
-    // ── Tabela de vendas ──
+    // ── Tabela de vendas (detalhada com itens) ──
+    // Colunas: # | Cliente | Compra | Vencimento | Valor | Status
     $pdf->TableHeader($cols);
 
     $fill = false;
     foreach ($resultados as $i => $r) {
-        if ($pdf->GetY() > 175) {
+        if ($pdf->GetY() > 168) {
             $pdf->AddPage();
             $pdf->TableHeader($cols);
             $fill = false;
         }
 
-        if ($fill) $pdf->SetFillColor(245, 245, 248);
-        else       $pdf->SetFillColor(255, 255, 255);
+        $bgVenda = $fill ? [245, 245, 248] : [255, 255, 255];
+        $pdf->SetFillColor($bgVenda[0], $bgVenda[1], $bgVenda[2]);
 
         $cliente = trim($r['nome'] . ' ' . $r['sobrenome']);
         if ($r['referencia']) $cliente .= ' (' . $r['referencia'] . ')';
 
         $sc = $pdf->StatusColor($r['status']);
 
-        $pdf->SetFont('Arial', '', 7.5);
+        // Linha da venda
+        $pdf->SetFont('Arial', 'B', 7.5);
         $pdf->SetTextColor(30, 30, 45);
         $pdf->Cell($cols[0], 7, $i + 1,                                          0, 0, 'L', true);
         $pdf->Cell($cols[1], 7, enc($cliente),                                    0, 0, 'L', true);
@@ -153,6 +207,33 @@ if ($tipoExportacao === 'pdf') {
         $pdf->SetTextColor($sc[0], $sc[1], $sc[2]);
         $pdf->SetFont('Arial', 'B', 7.5);
         $pdf->Cell($cols[5], 7, enc($r['status']),                                0, 1, 'C', true);
+
+        // Linhas de itens
+        $itens = $itensMap[$r['id']] ?? [];
+        if (!empty($itens)) {
+            $bgItem = [238, 240, 248];
+            $pdf->SetFillColor($bgItem[0], $bgItem[1], $bgItem[2]);
+            $pdf->SetFont('Arial', '', 7);
+            $pdf->SetTextColor(80, 80, 100);
+            $wNum  = $cols[0];
+            $wDesc = $cols[1] + $cols[2]; // descrição mais larga
+            $wQtd  = 15;
+            $wUnit = 22;
+            $wSub  = $cols[4];
+            $wBlank= $cols[3] - $wQtd - $wUnit + $cols[5];
+            foreach ($itens as $item) {
+                if ($pdf->GetY() > 185) {
+                    $pdf->AddPage();
+                    $pdf->TableHeader($cols);
+                }
+                $pdf->Cell($wNum,  5.5, '',                                              0, 0, 'L', true);
+                $pdf->Cell($wDesc, 5.5, enc('  › ' . $item['descricao']),               0, 0, 'L', true);
+                $pdf->Cell($wQtd,  5.5, enc($item['quantidade'] . 'x'),                 0, 0, 'C', true);
+                $pdf->Cell($wUnit, 5.5, enc('R$ ' . number_format($item['valor_unitario'],2,',','.')), 0, 0, 'R', true);
+                $pdf->Cell($wSub,  5.5, enc('R$ ' . number_format($item['valor_total'],2,',','.')),   0, 0, 'R', true);
+                $pdf->Cell($wBlank,5.5, '',                                              0, 1, 'L', true);
+            }
+        }
 
         $fill = !$fill;
     }
@@ -172,6 +253,10 @@ if ($tipoExportacao === 'pdf') {
     exit;
 }
 
-// ── JSON para a tela ──
+// ── JSON para a tela (inclui itens) ──
 header('Content-Type: application/json');
+foreach ($resultados as &$r) {
+    $r['itens'] = $itensMap[$r['id']] ?? [];
+}
+unset($r);
 echo json_encode($resultados);

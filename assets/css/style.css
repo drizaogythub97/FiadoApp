@@ -1822,3 +1822,321 @@ body {
     25%       { transform: translateX(-6px); }
     75%       { transform: translateX(6px); }
 }
+
+/* ==========================
+   DATE INPUT COM ÍCONE
+========================== */
+.date-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.date-input-wrapper .date-input {
+    width: 100%;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.date-icon {
+    position: absolute;
+    right: 12px;
+    font-size: 16px;
+    pointer-events: none;
+    color: var(--text-muted);
+    line-height: 1;
+}
+
+/* ── Flatpickr — tema FiadoApp ─────────────────── */
+.flatpickr-calendar {
+    background: var(--bg-surface-2) !important;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-card) !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-weekdays,
+span.flatpickr-weekday {
+    background: var(--bg-surface-1) !important;
+    color: var(--text-secondary) !important;
+    fill: var(--text-secondary) !important;
+    border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+    color: var(--text-primary) !important;
+    background: transparent !important;
+    font-weight: 600 !important;
+}
+
+.flatpickr-day {
+    color: var(--text-primary) !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+.flatpickr-day:hover,
+.flatpickr-day.prevMonthDay:hover,
+.flatpickr-day.nextMonthDay:hover {
+    background: var(--brand-alpha) !important;
+    border-color: var(--brand) !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+    background: var(--brand) !important;
+    border-color: var(--brand) !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+}
+
+.flatpickr-day.today:not(.selected) {
+    border-color: var(--brand) !important;
+    color: var(--brand) !important;
+    font-weight: 600 !important;
+}
+
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+    color: var(--text-muted) !important;
+}
+
+.flatpickr-prev-month,
+.flatpickr-next-month {
+    color: var(--text-secondary) !important;
+    fill: var(--text-secondary) !important;
+}
+
+.flatpickr-prev-month:hover svg,
+.flatpickr-next-month:hover svg {
+    fill: var(--brand) !important;
+}
+
+.numInputWrapper span.arrowUp,
+.numInputWrapper span.arrowDown {
+    border-color: var(--border-subtle) !important;
+}
+
+/* ==========================
+   ITEM DE VENDA — total parcial
+========================== */
+.item-venda {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.item-venda:last-child { border-bottom: none; }
+
+.item-venda-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.item-nome {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.item-unit {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.item-valor {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand);
+    white-space: nowrap;
+}
+
+/* ==========================
+   HISTÓRICO — total parcial
+========================== */
+.historico-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 5px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.historico-item:last-child { border-bottom: none; }
+
+.historico-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+}
+
+.historico-item-unit {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.historico-item-subtotal {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+/* ==========================
+   RELATÓRIOS — seleção e detalhamento
+========================== */
+.relatorio-selecao-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-bottom: 6px;
+}
+
+.relatorio-selecao-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    user-select: none;
+}
+
+.relatorio-selecao-label input[type="checkbox"] {
+    accent-color: var(--brand);
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+
+.relatorio-contador {
+    font-size: 12px;
+    color: var(--brand);
+    font-weight: 600;
+}
+
+.relatorio-card {
+    background: var(--bg-surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+}
+
+.relatorio-card:has(.relatorio-check:checked) {
+    border-color: var(--brand);
+}
+
+.relatorio-card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+}
+
+.relatorio-check-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.relatorio-check {
+    accent-color: var(--brand);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.relatorio-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.relatorio-card-nome {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.relatorio-ref {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.relatorio-card-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.relatorio-card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.relatorio-card-valor {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+/* Itens dentro do card de relatório */
+.relatorio-itens {
+    border-top: 1px solid var(--border-subtle);
+    padding: 8px 14px 10px 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--bg-surface-1);
+}
+
+.relatorio-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.relatorio-item-desc {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.relatorio-item-unit {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.relatorio-item-subtotal {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+

@@ -10,7 +10,8 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nova Venda - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=10">
+<link rel="stylesheet" href="assets/css/style.css?v=11">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 
@@ -72,19 +73,25 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
 
         <div class="form-group">
             <label>Telefone</label>
-            <input type="text" id="telefone" placeholder="(00) 00000-0000">
+            <input type="text" id="telefone" data-telefone placeholder="(00) 00000-0000" inputmode="numeric">
         </div>
 
         <!-- DATAS -->
         <div class="form-row">
             <div class="form-group">
                 <label>Data da Compra</label>
-                <input type="date" id="data_compra">
+                <div class="date-input-wrapper">
+                    <input type="text" id="data_compra" class="date-input" placeholder="dd/mm/aaaa" readonly>
+                    <span class="date-icon">📅</span>
+                </div>
             </div>
 
             <div class="form-group">
                 <label>Data de Vencimento</label>
-                <input type="date" id="data_vencimento">
+                <div class="date-input-wrapper">
+                    <input type="text" id="data_vencimento" class="date-input" placeholder="Automático (+30 dias)" readonly>
+                    <span class="date-icon">📅</span>
+                </div>
             </div>
         </div>
 
@@ -127,7 +134,10 @@ $nome_usuario = $_SESSION['usuario_nome'] ?? "Usuário";
     FiadoApp — Todos os direitos reservados para Adriano Cardoso.
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script src="/assets/js/toast.js"></script>
+<script src="/assets/js/telefone.js"></script>
 <script src="/assets/js/cadastro.js"></script>
 <div id="toast-container"></div>
 

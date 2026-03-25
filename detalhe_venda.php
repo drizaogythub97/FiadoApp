@@ -96,7 +96,10 @@ if($origem === 'cliente' && $cliente_id){
     <div>
     <?php foreach($itens as $item): ?>
         <div class="item-venda">
-            <span class="item-nome"><?= $item['quantidade'] ?>x <?= htmlspecialchars($item['descricao']) ?></span>
+            <div class="item-venda-info">
+                <span class="item-nome"><?= $item['quantidade'] ?>x <?= htmlspecialchars($item['descricao']) ?></span>
+                <span class="item-unit">R$ <?= number_format($item['valor_unitario'], 2, ',', '.') ?> un.</span>
+            </div>
             <span class="item-valor">R$ <?= number_format($item['valor_total'], 2, ',', '.') ?></span>
         </div>
     <?php endforeach; ?>

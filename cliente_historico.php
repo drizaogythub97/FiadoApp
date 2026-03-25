@@ -120,8 +120,11 @@ async function carregarHistorico(){
         venda.itens.forEach(item => {
             itensHTML += `
                 <div class="historico-item">
-                    <span>${item.quantidade}x ${item.descricao}</span>
-                    <span>R$ ${formatarMoeda(item.valor_total)}</span>
+                    <div class="historico-item-info">
+                        <span>${item.quantidade}x ${item.descricao}</span>
+                        <span class="historico-item-unit">R$ ${formatarMoeda(item.valor_unitario)} un.</span>
+                    </div>
+                    <span class="historico-item-subtotal">R$ ${formatarMoeda(item.valor_total)}</span>
                 </div>
             `;
         });

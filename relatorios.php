@@ -8,7 +8,8 @@ require_once __DIR__ . '/config/auth.php';
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatórios - FiadoApp</title>
-<link rel="stylesheet" href="assets/css/style.css?v=10">
+<link rel="stylesheet" href="assets/css/style.css?v=11">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
 
@@ -39,12 +40,18 @@ require_once __DIR__ . '/config/auth.php';
 
         <div class="form-group">
             <label>Data Inicial</label>
-            <input type="date" id="data_inicio">
+            <div class="date-input-wrapper">
+                <input type="text" id="data_inicio" class="date-input" placeholder="dd/mm/aaaa" readonly>
+                <span class="date-icon">📅</span>
+            </div>
         </div>
 
         <div class="form-group">
             <label>Data Final</label>
-            <input type="date" id="data_fim">
+            <div class="date-input-wrapper">
+                <input type="text" id="data_fim" class="date-input" placeholder="dd/mm/aaaa" readonly>
+                <span class="date-icon">📅</span>
+            </div>
         </div>
 
         <div class="form-group">
@@ -67,7 +74,18 @@ require_once __DIR__ . '/config/auth.php';
         🔍 Buscar
     </button>
 
-    <div id="resultadoRelatorio" style="margin-top:20px;"></div>
+    <!-- Barra de seleção (aparece após busca) -->
+    <div id="selecaoBar" style="display:none; margin-top:20px;">
+        <div class="relatorio-selecao-bar">
+            <label class="relatorio-selecao-label">
+                <input type="checkbox" id="selecionarTodos" onchange="toggleTodos(this.checked)">
+                <span>Selecionar todas</span>
+            </label>
+            <span id="selecaoContador" class="relatorio-contador">0 selecionadas</span>
+        </div>
+    </div>
+
+    <div id="resultadoRelatorio" style="margin-top:8px;"></div>
 
     <div class="relatorio-export-btns" id="exportBtns" style="display:none;">
         <button class="btn-secondary" onclick="exportarCSV()">⬇ Exportar CSV</button>
@@ -89,6 +107,9 @@ require_once __DIR__ . '/config/auth.php';
     FiadoApp — Todos os direitos reservados para Adriano Cardoso.
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+<script src="/assets/js/cliente.js"></script>
 <script src="assets/js/relatorios.js"></script>
 <div id="toast-container"></div>
 </body>

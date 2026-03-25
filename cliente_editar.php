@@ -92,7 +92,7 @@ $voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
     <div class="form-group">
         <label for="telefone">Telefone <span style="color:var(--text-muted); font-weight:400;">(opcional)</span></label>
         <div style="display:flex; gap:8px; align-items:center;">
-            <input type="text" id="telefone" value="<?= htmlspecialchars($cliente['telefone'] ?? '') ?>" placeholder="(00) 00000-0000" maxlength="20" style="flex:1;">
+            <input type="text" id="telefone" data-telefone value="<?= htmlspecialchars($cliente['telefone'] ?? '') ?>" placeholder="(00) 00000-0000" maxlength="20" inputmode="numeric" style="flex:1;">
             <button type="button" class="btn-limpar" onclick="limparCampo('telefone')" title="Limpar telefone">×</button>
         </div>
     </div>
@@ -136,11 +136,18 @@ $voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
 </style>
 
 <script src="/assets/js/toast.js"></script>
+<script src="/assets/js/telefone.js"></script>
 <div id="toast-container"></div>
 
 <script>
 const CLIENTE_ID = <?= $cliente_id ?>;
 const VOLTA      = <?= json_encode($volta) ?>;
+
+// Formata telefone já salvo ao carregar
+document.addEventListener('DOMContentLoaded', function() {
+    const telEl = document.getElementById('telefone');
+    if (telEl && telEl.value) preencherTelefone(telEl, telEl.value);
+});
 
 function limparCampo(id) {
     document.getElementById(id).value = '';

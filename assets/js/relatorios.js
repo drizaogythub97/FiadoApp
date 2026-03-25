@@ -1,3 +1,55 @@
+// ── Flatpickr nos filtros de data ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    const fpOpts = {
+        locale: 'pt',
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        allowInput: false,
+    };
+    flatpickr('#data_inicio', fpOpts);
+    flatpickr('#data_fim',    fpOpts);
+});
+
+// ── Seleção de vendas ─────────────────────────────────────────────────────
+const selectedIds = new Set();
+
+function toggleSelecao(id, checked) {
+    if (checked) selectedIds.add(id);
+    else         selectedIds.delete(id);
+    atualizarContador();
+    sincronizarTodos();
+}
+
+function toggleTodos(checked) {
+    document.querySelectorAll('.relatorio-check').forEach(cb => {
+        cb.checked = checked;
+        const id = parseInt(cb.dataset.id);
+        if (checked) selectedIds.add(id);
+        else         selectedIds.delete(id);
+    });
+    atualizarContador();
+}
+
+function sincronizarTodos() {
+    const cbs = document.querySelectorAll('.relatorio-check');
+    const todos = document.getElementById('selecionarTodos');
+    if (!todos) return;
+    const totalMarcados = [...cbs].filter(c => c.checked).length;
+    todos.checked       = totalMarcados === cbs.length && cbs.length > 0;
+    todos.indeterminate = totalMarcados > 0 && totalMarcados < cbs.length;
+}
+
+function atualizarContador() {
+    const el = document.getElementById('selecaoContador');
+    if (!el) return;
+    const n = selectedIds.size;
+    el.textContent = n === 0
+        ? '0 selecionadas'
+        : `${n} selecionada${n > 1 ? 's' : ''}`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
 function formatarData(dataISO) {
     if (!dataISO) return '—';
     const partes = dataISO.split(' ')[0].split('-');
@@ -12,70 +64,118 @@ function formatarMoeda(valor) {
     });
 }
 
-async function buscarRelatorio(){
-
-    const filtros = obterFiltros();
-    const container = document.getElementById("resultadoRelatorio");
-    const exportBtns = document.getElementById("exportBtns");
+// ── Busca e renderização ──────────────────────────────────────────────────
+async function buscarRelatorio() {
+    const filtros   = obterFiltros();
+    const container = document.getElementById('resultadoRelatorio');
+    const exportBtns = document.getElementById('exportBtns');
+    const selBar    = document.getElementById('selecaoBar');
 
     container.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Buscando...</p>`;
-    exportBtns.style.display = "none";
+    exportBtns.style.display = 'none';
+    selBar.style.display     = 'none';
+    selectedIds.clear();
 
-    const response = await fetch("/api/gerar_relatorio.php", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
+    const response = await fetch('/api/gerar_relatorio.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(filtros)
     });
 
     const dados = await response.json();
-    container.innerHTML = "";
+    container.innerHTML = '';
 
-    if(dados.length === 0){
+    if (dados.length === 0) {
         container.innerHTML = `<p style="color:var(--text-muted); font-size:14px; padding:8px 0;">Nenhum resultado encontrado.</p>`;
         return;
     }
 
     dados.forEach(venda => {
+        const isAtiva     = venda.status === 'ATIVA';
+        const badgeClass  = isAtiva ? 'badge-ativa' : 'badge-paga';
+        const badgeTexto  = isAtiva ? '● Ativa' : '✓ Paga';
 
-        const isAtiva = venda.status === 'ATIVA';
-        const badgeClass = isAtiva ? 'badge-ativa' : 'badge-paga';
-        const badgeTexto = isAtiva ? '● Ativa' : '✓ Paga';
+        // Itens da venda
+        let itensHTML = '';
+        if (venda.itens && venda.itens.length > 0) {
+            itensHTML = '<div class="relatorio-itens">';
+            venda.itens.forEach(item => {
+                const subtotal = parseFloat(item.valor_total);
+                const unitario = parseFloat(item.valor_unitario);
+                itensHTML += `
+                    <div class="relatorio-item-row">
+                        <span class="relatorio-item-desc">
+                            ${item.quantidade}× ${item.descricao}
+                            <span class="relatorio-item-unit">R$ ${formatarMoeda(unitario)} un.</span>
+                        </span>
+                        <span class="relatorio-item-subtotal">R$ ${formatarMoeda(subtotal)}</span>
+                    </div>
+                `;
+            });
+            itensHTML += '</div>';
+        }
 
         container.innerHTML += `
             <div class="relatorio-card">
-                <div class="relatorio-card-info">
-                    <span class="relatorio-card-nome">
-                        ${venda.nome} ${venda.sobrenome}
-                        ${venda.referencia ? `(${venda.referencia})` : ""}
-                    </span>
-                    <span class="relatorio-card-meta">📅 ${formatarData(venda.data_compra)}</span>
+                <div class="relatorio-card-top">
+                    <label class="relatorio-check-label">
+                        <input type="checkbox" class="relatorio-check" data-id="${venda.id}"
+                               onchange="toggleSelecao(${venda.id}, this.checked)">
+                    </label>
+                    <div class="relatorio-card-info">
+                        <span class="relatorio-card-nome">
+                            ${venda.nome} ${venda.sobrenome || ''}
+                            ${venda.referencia ? `<span class="relatorio-ref">(${venda.referencia})</span>` : ''}
+                        </span>
+                        <span class="relatorio-card-meta">📅 ${formatarData(venda.data_compra)}
+                            ${venda.data_vencimento ? ' · Vence: ' + formatarData(venda.data_vencimento) : ''}
+                        </span>
+                    </div>
+                    <div class="relatorio-card-right">
+                        <span class="relatorio-card-valor">R$ ${formatarMoeda(venda.valor_total)}</span>
+                        <span class="badge ${badgeClass}">${badgeTexto}</span>
+                    </div>
                 </div>
-                <div class="relatorio-card-right">
-                    <span class="relatorio-card-valor">R$ ${formatarMoeda(venda.valor_total)}</span>
-                    <span class="badge ${badgeClass}">${badgeTexto}</span>
-                </div>
+                ${itensHTML}
             </div>
         `;
     });
 
-    exportBtns.style.display = "grid";
+    selBar.style.display     = 'block';
+    exportBtns.style.display = 'grid';
+    atualizarContador();
 }
 
-function exportarCSV(){
-    const filtros = obterFiltros();
-    window.location.href = "/api/gerar_relatorio.php?tipo=csv&" + new URLSearchParams(filtros);
-}
-
-function exportarPDF(){
-    const filtros = obterFiltros();
-    window.location.href = "/api/gerar_relatorio.php?tipo=pdf&" + new URLSearchParams(filtros);
-}
-
-function obterFiltros(){
+// ── Exportação ────────────────────────────────────────────────────────────
+function obterFiltros() {
     return {
-        data_inicio: document.getElementById("data_inicio").value,
-        data_fim: document.getElementById("data_fim").value,
-        status: document.getElementById("status").value,
-        inicial: document.getElementById("inicial").value
+        data_inicio: document.getElementById('data_inicio').value,
+        data_fim:    document.getElementById('data_fim').value,
+        status:      document.getElementById('status').value,
+        inicial:     document.getElementById('inicial').value
     };
+}
+
+function obterIds() {
+    return selectedIds.size > 0 ? [...selectedIds] : [];
+}
+
+function exportarCSV() {
+    const filtros = { ...obterFiltros(), tipo: 'csv', ids: obterIds() };
+    const params  = new URLSearchParams();
+    Object.entries(filtros).forEach(([k, v]) => {
+        if (Array.isArray(v)) v.forEach(id => params.append('ids[]', id));
+        else if (v !== undefined && v !== '') params.append(k, v);
+    });
+    baixarPDF('/api/gerar_relatorio.php?' + params.toString());
+}
+
+function exportarPDF() {
+    const filtros = { ...obterFiltros(), tipo: 'pdf', ids: obterIds() };
+    const params  = new URLSearchParams();
+    Object.entries(filtros).forEach(([k, v]) => {
+        if (Array.isArray(v)) v.forEach(id => params.append('ids[]', id));
+        else if (v !== undefined && v !== '') params.append(k, v);
+    });
+    baixarPDF('/api/gerar_relatorio.php?' + params.toString());
 }
