@@ -1,3 +1,67 @@
+// ── Year picker customizado para Flatpickr ────────────────────────────────
+function setupYearPicker(fp) {
+    const currentMonth = fp.calendarContainer.querySelector('.flatpickr-current-month');
+    if (!currentMonth) return;
+
+    // Cria o botão de ano
+    const btn = document.createElement('span');
+    btn.className = 'fp-year-btn';
+    btn.textContent = fp.currentYear;
+    currentMonth.appendChild(btn);
+
+    // Atualiza o texto do botão ao mudar de mês/ano
+    const sync = () => { btn.textContent = fp.currentYear; };
+    fp.config.onMonthChange.push(sync);
+    fp.config.onYearChange.push(sync);
+
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // Remove lista existente
+        document.querySelectorAll('.fp-year-list').forEach(el => el.remove());
+
+        const cur  = fp.currentYear;
+        const list = document.createElement('div');
+        list.className = 'fp-year-list';
+
+        // Lista: 15 anos atrás até 5 anos à frente
+        for (let y = cur + 5; y >= cur - 15; y--) {
+            const item = document.createElement('div');
+            item.className = 'fp-year-item' + (y === cur ? ' fp-year-active' : '');
+            item.textContent = y;
+            item.addEventListener('click', function(ev) {
+                ev.stopPropagation();
+                fp.changeYear(y);
+                btn.textContent = y;
+                list.remove();
+            });
+            list.appendChild(item);
+        }
+
+        // Posiciona a lista relativa ao calendário
+        fp.calendarContainer.style.position = 'relative';
+        fp.calendarContainer.appendChild(list);
+
+        // Posiciona logo abaixo do botão de ano
+        const btnRect  = btn.getBoundingClientRect();
+        const calRect  = fp.calendarContainer.getBoundingClientRect();
+        list.style.left = (btnRect.left - calRect.left) + 'px';
+        list.style.top  = (btnRect.bottom - calRect.top + 4) + 'px';
+        list.style.position = 'absolute';
+
+        // Scrolla até o ano atual
+        const active = list.querySelector('.fp-year-active');
+        if (active) setTimeout(() => active.scrollIntoView({ block: 'center' }), 10);
+
+        // Fecha ao clicar fora
+        setTimeout(() => {
+            document.addEventListener('click', function close() {
+                list.remove();
+                document.removeEventListener('click', close);
+            }, { once: true });
+        }, 50);
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
 
     // ── Flatpickr — Calendário personalizado ──────────────────────────────
@@ -8,6 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
         altFormat: 'd/m/Y',
         allowInput: false,
         disableMobile: false,
+        onReady: function() { setupYearPicker(this); }
     };
 
     const fpCompra = flatpickr("#data_compra", {

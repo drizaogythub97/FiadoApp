@@ -1856,34 +1856,24 @@ body {
     font-family: 'Inter', sans-serif !important;
 }
 
-/* Header — barra de navegação */
 .flatpickr-months {
-    position: relative !important;
     background: var(--bg-surface-1) !important;
     border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
-    padding: 4px 0 !important;
-    align-items: center !important;
 }
 
 .flatpickr-months .flatpickr-month {
     background: transparent !important;
-    border-radius: 0 !important;
-    height: 36px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    color: var(--text-primary) !important;
+    fill: var(--text-primary) !important;
     overflow: visible !important;
 }
 
-/* Mês centralizado — apenas nome + seta dropdown */
 .flatpickr-current-month {
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    position: static !important;
-    width: 100% !important;
-    padding: 0 !important;
+    gap: 4px !important;
     font-size: 14px !important;
+    padding: 6px 2px !important;
 }
 
 .flatpickr-current-month .flatpickr-monthDropdown-months {
@@ -1892,44 +1882,84 @@ body {
     font-weight: 700 !important;
     font-size: 14px !important;
     border: none !important;
-    padding: 2px 4px !important;
     cursor: pointer !important;
-    appearance: auto !important;
-}
-
-/* Seletor de ano — canto superior direito do calendário */
-.flatpickr-current-month .numInputWrapper {
-    position: absolute !important;
-    right: 10px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 62px !important;
-    background: var(--bg-surface-2) !important;
-    border: 1px solid var(--border-subtle) !important;
-    border-radius: 6px !important;
-    padding: 2px 4px !important;
-    display: flex !important;
-    align-items: center !important;
-}
-
-.flatpickr-current-month input.cur-year {
-    color: var(--text-primary) !important;
-    background: transparent !important;
-    font-weight: 600 !important;
-    font-size: 13px !important;
-    width: 44px !important;
-    border: none !important;
     padding: 0 2px !important;
-    text-align: center !important;
 }
 
-.numInputWrapper span.arrowUp,
-.numInputWrapper span.arrowDown {
-    opacity: 0.5 !important;
+/* Esconde o input nativo de ano — substituído por fp-year-btn via JS */
+.flatpickr-current-month .numInputWrapper {
+    display: none !important;
 }
-.numInputWrapper:hover span.arrowUp,
-.numInputWrapper:hover span.arrowDown {
-    opacity: 1 !important;
+
+/* Botão de ano customizado (inserido via JS) */
+.fp-year-btn {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 2px 7px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+    white-space: nowrap;
+    position: relative;
+}
+
+.fp-year-btn::after {
+    content: ' ▾';
+    font-size: 9px;
+    opacity: 0.55;
+}
+
+.fp-year-btn:hover {
+    color: var(--brand);
+    border-color: var(--border-subtle);
+    background: var(--bg-surface-2);
+}
+
+/* Lista dropdown de anos */
+.fp-year-list {
+    position: absolute;
+    background: var(--bg-surface-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 4px 0;
+    z-index: 99999;
+    max-height: 200px;
+    overflow-y: auto;
+    min-width: 78px;
+    box-shadow: var(--shadow-card);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+}
+
+.fp-year-item {
+    padding: 7px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+    transition: background 0.12s;
+    font-family: 'Inter', sans-serif;
+}
+
+.fp-year-item:hover {
+    background: var(--brand-alpha);
+    color: var(--text-primary);
+}
+
+.fp-year-item.fp-year-active {
+    color: var(--brand);
+    font-weight: 700;
+}
+
+.flatpickr-prev-month, .flatpickr-next-month {
+    fill: var(--text-secondary) !important;
+}
+
+.flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg {
+    fill: var(--brand) !important;
 }
 
 .flatpickr-weekdays,

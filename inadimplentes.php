@@ -91,7 +91,7 @@ $totalDevidoGeral = array_sum(array_column($inadimplentes, 'total_devido'));
                 elseif($diasAtraso <= 30)  $atrasoBadge = "badge-ativa";
                 else                       $atrasoBadge = "badge-ativa";
             ?>
-            <a href="cliente_detalhe.php?id=<?= $c['cliente_id'] ?>" class="inadimplente-card">
+            <a href="cliente_detalhe.php?id=<?= $c['cliente_id'] ?>&volta=inadimplentes" class="inadimplente-card">
                 <div class="inadimplente-info">
                     <span class="inadimplente-nome">
                         <?= $nomeCompleto ?>

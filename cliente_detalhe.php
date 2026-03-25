@@ -27,7 +27,11 @@ $stmt = $pdo->prepare("
 $stmt->execute([$cliente_id, $usuario_id]);
 $vendas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
+if ($volta === 'inadimplentes') {
+    $voltaURL = "inadimplentes.php";
+} else {
+    $voltaURL = "consulta.php" . ($volta ? "?letra={$volta}" : "");
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
