@@ -32,22 +32,6 @@ $csrfToken  = htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES);
             </a>
         </div>
 
-        <!-- Busca global -->
-        <div class="header-search" id="headerSearchWrapper">
-            <div class="header-search-inner">
-                <span class="header-search-icon">🔍</span>
-                <input
-                    type="text"
-                    id="headerSearchInput"
-                    class="header-search-input"
-                    placeholder="Buscar cliente..."
-                    autocomplete="off"
-                    spellcheck="false"
-                >
-            </div>
-            <div id="headerSearchDropdown" class="header-search-dropdown"></div>
-        </div>
-
         <!-- Ações -->
         <div class="header-actions">
             <a href="/logout.php" class="btn-header-action">↪ Sair</a>
@@ -57,67 +41,6 @@ $csrfToken  = htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES);
 </header>
 
 <script>
-// ── Busca global no header ─────────────────────────────────────────────────
-(function() {
-    let debounce;
-    const input    = document.getElementById('headerSearchInput');
-    const dropdown = document.getElementById('headerSearchDropdown');
-    const wrapper  = document.getElementById('headerSearchWrapper');
-
-    if (!input) return;
-
-    input.addEventListener('input', function() {
-        clearTimeout(debounce);
-        const q = this.value.trim();
-        if (q.length < 2) { fecharDropdown(); return; }
-        debounce = setTimeout(() => buscarHeader(q), 300);
-    });
-
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') { fecharDropdown(); input.blur(); }
-    });
-
-    document.addEventListener('click', function(e) {
-        if (!wrapper.contains(e.target)) fecharDropdown();
-    });
-
-    async function buscarHeader(q) {
-        try {
-            const res     = await fetch('/api/buscar_clientes.php?q=' + encodeURIComponent(q));
-            const clientes = await res.json();
-            renderDropdown(clientes);
-        } catch(e) { fecharDropdown(); }
-    }
-
-    function renderDropdown(clientes) {
-        dropdown.innerHTML = '';
-        if (!clientes.length) { fecharDropdown(); return; }
-
-        const max = Math.min(clientes.length, 6);
-        for (let i = 0; i < max; i++) {
-            const c    = clientes[i];
-            const item = document.createElement('div');
-            item.className = 'header-search-item';
-
-            const nome = c.nome + (c.sobrenome ? ' ' + c.sobrenome : '');
-            const ref  = c.referencia ? ` <span class="hs-ref">(${c.referencia})</span>` : '';
-            item.innerHTML = '<span class="hs-nome">' + nome + '</span>' + ref;
-
-            item.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                window.location.href = '/cliente_detalhe.php?id=' + c.id;
-            });
-            dropdown.appendChild(item);
-        }
-        dropdown.style.display = 'block';
-    }
-
-    function fecharDropdown() {
-        dropdown.innerHTML = '';
-        dropdown.style.display = 'none';
-    }
-})();
-
 // ── Interceptor CSRF — adiciona X-CSRF-Token em todos os POST fetch ────────
 (function() {
     const token = document.querySelector('meta[name="csrf-token"]')?.content;

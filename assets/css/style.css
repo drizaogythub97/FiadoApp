@@ -240,7 +240,7 @@ body {
     color: var(--text-secondary);
 }
 
-.form-group input,
+.form-group input:not([type="checkbox"]):not([type="radio"]),
 .form-group select,
 .form-group textarea {
     padding: 11px 14px;
@@ -253,6 +253,16 @@ body {
     transition: 0.2s ease;
     -webkit-appearance: none;
     appearance: none;
+}
+
+/* Checkbox e radio mantêm aparência nativa */
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--brand);
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
 .form-group select {
@@ -707,9 +717,7 @@ body {
     box-shadow: var(--shadow-card);
 }
 
-.nav-card:last-child {
-    grid-column: span 2;
-}
+/* 4 cards preenchem o grid 2x2 naturalmente — sem span */
 
 .nav-card-icon {
     width: 44px;
@@ -2392,3 +2400,64 @@ span.flatpickr-weekday {
     border-color: var(--brand) !important;
 }
 
+
+/* ==========================
+   BUSCA RÁPIDA — DASHBOARD
+========================== */
+.dashboard-search-wrapper {
+    position: relative;
+    margin: 0 0 4px 0;
+}
+
+.dashboard-search-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+}
+
+.dashboard-search-inner {
+    display: flex;
+    align-items: center;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    gap: 10px;
+    transition: border-color 0.15s;
+}
+
+.dashboard-search-inner:focus-within {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(232, 98, 74, 0.1);
+}
+
+.dashboard-search-icon {
+    font-size: 15px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.dashboard-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 12px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    min-width: 0;
+}
+
+.dashboard-search-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Dropdown reutiliza .header-search-dropdown + .header-search-item */
+.dashboard-search-wrapper .header-search-dropdown {
+    top: calc(100% + 2px);
+}
