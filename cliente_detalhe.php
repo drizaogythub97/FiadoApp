@@ -127,6 +127,10 @@ require_once __DIR__ . '/includes/header.php';
            class="btn-secondary" style="text-decoration:none;">
             📋 Ver Histórico
         </a>
+        <a href="/cliente_editar.php?id=<?= $cliente_id ?><?= $volta ? '&volta=' . urlencode($volta) : '' ?>"
+           class="btn-secondary" style="text-decoration:none;">
+            ✎ Editar Cliente
+        </a>
         <a href="/cadastro.php?cliente_id=<?= $cliente_id ?>" class="btn-secondary" style="text-decoration:none; background:var(--brand-alpha); border-color:var(--brand); color:var(--brand);">
             ➕ Nova Venda
         </a>

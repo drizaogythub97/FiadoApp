@@ -151,9 +151,7 @@ function renderizarClientes(clientes) {
                 <span><span class="info-label">Pagas</span><span class="info-value">${cliente.total_pagas}</span></span>
             </div>
             <div class="cliente-actions">
-                <button class="btn-primary"   onclick="detalharCliente(${cliente.cliente_id},'${volta}')">Detalhar</button>
-                <button class="btn-secondary" onclick="historicoCliente(${cliente.cliente_id},'${volta}')">Histórico</button>
-                <button class="btn-secondary" onclick="editarCliente(${cliente.cliente_id},'${volta}')">✎ Editar</button>
+                <button class="btn-primary" onclick="detalharCliente(${cliente.cliente_id},'${volta}')">Detalhar</button>
                 <a href="/cadastro.php?cliente_id=${cliente.cliente_id}" class="btn-nova-venda">➕ Nova Venda</a>
             </div>
         `;
@@ -167,12 +165,6 @@ function formatarMoeda(v) {
 
 function detalharCliente(id, volta) {
     window.location.href = `/cliente_detalhe.php?id=${id}${volta ? '&volta=' + volta : ''}`;
-}
-function historicoCliente(id, volta) {
-    window.location.href = `/cliente_historico.php?id=${id}${volta ? '&volta=' + volta : ''}`;
-}
-function editarCliente(id, volta) {
-    window.location.href = `/cliente_editar.php?id=${id}${volta ? '&volta=' + volta : ''}`;
 }
 
 // ── Auto-inicializar ao abrir a página ────────────────────────────────────
