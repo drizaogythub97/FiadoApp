@@ -132,6 +132,32 @@ class FiadoBasePDF extends FPDF {
     }
 
     /**
+     * Caixa de destaque para o saldo restante em aberto após pagamento parcial.
+     */
+    function SaldoRestante($valor) {
+        $boxY = $this->GetY();
+        // Borda e fundo amarelo-alaranjado claro para contrastar com o vermelho do total
+        $this->SetFillColor(255, 243, 220);
+        $this->Rect(12, $boxY, 186, 22, 'F');
+
+        // Borda sutil
+        $this->SetDrawColor(230, 160, 60);
+        $this->Rect(12, $boxY, 186, 22, 'D');
+
+        $this->SetXY(12, $boxY + 3);
+        $this->SetTextColor(160, 90, 10);
+        $this->SetFont('Arial', '', 8);
+        $this->Cell(186, 5, enc('SALDO RESTANTE EM ABERTO'), 0, 1, 'C');
+
+        $this->SetFont('Arial', 'B', 16);
+        $this->Cell(186, 11, enc(brl($valor)), 0, 1, 'C');
+
+        // Restaura cor de desenho
+        $this->SetDrawColor(0, 0, 0);
+        $this->Ln(6);
+    }
+
+    /**
      * Nota de rodapé textual ao final do documento.
      */
     function NotaFinal($texto) {

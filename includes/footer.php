@@ -13,6 +13,7 @@ $footerScripts = $footerScripts ?? '';
 </footer>
 
 <script src="/assets/js/toast.js"></script>
+<script src="/assets/js/comprovante_imagem.js"></script>
 <div id="toast-container"></div>
 <?= $footerScripts ?>
 </body>

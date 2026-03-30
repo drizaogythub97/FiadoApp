@@ -68,6 +68,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="relatorio-export-btns" id="exportBtns" style="display:none;">
         <button class="btn-secondary" onclick="exportarCSV()">⬇ Exportar CSV</button>
         <button class="btn-secondary" onclick="exportarPDF()">⬇ Exportar PDF</button>
+        <button class="btn-secondary" onclick="exportarImagem()">🖼️ Exportar Imagem</button>
     </div>
 
     <div class="form-actions" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border-subtle);">
@@ -86,6 +87,7 @@ $footerScripts = <<<'SCRIPT'
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script src="/assets/js/cliente.js"></script>
+<script src="/assets/js/relatorio_imagem.js"></script>
 <script src="/assets/js/relatorios.js"></script>
 SCRIPT;
 require_once __DIR__ . '/includes/footer.php';

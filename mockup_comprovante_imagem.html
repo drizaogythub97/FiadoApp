@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Comprovante em Imagem</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 40px 16px 70px;
+    gap: 28px;
+  }
+  h1 {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 400;
+    opacity: .5;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  #canvas-wrapper {
+    width: 360px;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,.7);
+  }
+  canvas { display: block; width: 100%; }
+  .tabs {
+    display: flex;
+    gap: 8px;
+  }
+  .tab {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: .2s;
+    font-family: inherit;
+    font-weight: 500;
+  }
+  .tab.active, .tab:hover { background: #e8624a; color: #fff; border-color: #e8624a; }
+  .btn-download {
+    background: #e8624a; color: #fff; border: none;
+    padding: 13px 32px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    letter-spacing: .5px; transition: background .2s; font-family: inherit;
+  }
+  .btn-download:hover { background: #c94e38; }
+  .info-size {
+    color: rgba(255,255,255,.38);
+    font-size: 12px;
+    text-align: center;
+  }
+  .info-size strong { color: rgba(255,255,255,.7); }
+</style>
+</head>
+<body>
+
+<h1>Mockup — Comprovante em Imagem<br>Largura 1080 px · Altura dinâmica</h1>
+
+<div class="tabs">
+  <button class="tab active" onclick="setMode('parcial',this)">Parcial</button>
+  <button class="tab"        onclick="setMode('todas',this)">Todas</button>
+  <button class="tab"        onclick="setMode('selecionadas',this)">Selecionadas</button>
+</div>
+
+<div id="canvas-wrapper">
+  <canvas id="receipt"></canvas>
+</div>
+
+<button class="btn-download" onclick="baixarImagem()">⬇ Baixar PNG</button>
+<p class="info-size" id="sizeInfo">—</p>
+
+<script>
+// ── Logo ──────────────────────────────────────────────────────────────────────
+const logoImg = new Image();
+logoImg.src     = '/assets/img/logo.png';
+logoImg.onload  = () => drawReceipt(currentMode);
+logoImg.onerror = () => drawReceipt(currentMode);
+
+let currentMode = 'parcial';
+
+// ── Datasets ──────────────────────────────────────────────────────────────────
+const modos = {
+  parcial: {
+    titulo: 'Quitação Parcial',
+    vendas: [
+      { id: 42, data: '10/03/2025', itens: '2x Arroz, 1x Feijão',  valor: 35.50 },
+      { id: 47, data: '18/03/2025', itens: '1x Óleo, 3x Macarrão', valor: 28.90 },
+      { id: 53, data: '25/03/2025', itens: '1x Açúcar',             valor: 12.00 },
+    ],
+    totalQuitado: 50.00, saldoRestante: 26.40,
+    nota: 'Este documento confirma a quitação parcial das vendas registradas no FiadoApp.',
+  },
+  todas: {
+    titulo: 'Quitação Total',
+    vendas: [
+      { id: 42, data: '10/03/2025', itens: '2x Arroz, 1x Feijão',  valor: 35.50 },
+      { id: 47, data: '18/03/2025', itens: '1x Óleo, 3x Macarrão', valor: 28.90 },
+      { id: 53, data: '25/03/2025', itens: '1x Açúcar',             valor: 12.00 },
+    ],
+    totalQuitado: 76.40, saldoRestante: 0,
+    nota: 'Este documento confirma a quitação de todas as vendas ativas do cliente.',
+  },
+  selecionadas: {
+    titulo: 'Vendas Selecionadas',
+    vendas: [
+      { id: 42, data: '10/03/2025', itens: '2x Arroz, 1x Feijão', valor: 35.50 },
+      { id: 53, data: '25/03/2025', itens: '1x Açúcar',            valor: 12.00 },
+    ],
+    totalQuitado: 47.50, saldoRestante: 0,
+    nota: 'Este documento confirma a quitação das vendas selecionadas pelo usuário.',
+  },
+};
+
+const dadosBase = {
+  emitidoPor: 'Maria da Loja',
+  cliente:    'João Silva',
+  referencia: 'Bairro Centro',
+  telefone:   '(11) 99999-1234',
+  dataEmissao:'30/03/2025 14:37',
+};
+
+function brl(v) {
+  return 'R$ ' + parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function truncate(ctx, text, maxW) {
+  while (ctx.measureText(text).width > maxW && text.length > 6)
+    text = text.slice(0, -4) + '…';
+  return text;
+}
+
+// ── Constantes de layout (resolução real: 1080px) ─────────────────────────────
+const W   = 1080;
+const PAD = 72;
+const COL = W - PAD * 2;
+
+const HEADER_H      = 390;
+const BODY_TOP      = 68;   // espaço após header
+const SEC_TITLE_H   = 68;   // altura do bloco de título de seção
+const INFO_ROW_H    = 108;  // label + valor + gap
+const VENDA_ROW_H   = 130;  // cada linha de venda + gap
+const VENDA_GAP     = 14;
+const TOTAL_BLOCK_H = 170;
+const SALDO_BLOCK_H = 148;
+const NOTA_H        = 90;
+const FOOTER_H      = 80;
+const BODY_BOTTOM   = 50;
+
+function calcCanvasHeight(mode) {
+  const d = modos[mode];
+  const infoRows = 5; // cliente, referencia, telefone, emitidoPor, dataEmissao
+  // seção cliente: título + rows
+  const clienteH = SEC_TITLE_H + infoRows * INFO_ROW_H + 14;
+  // seção vendas: título + rows
+  const vendasH  = SEC_TITLE_H + d.vendas.length * (VENDA_ROW_H + VENDA_GAP) + 22;
+  // blocos de valor
+  const blocos   = TOTAL_BLOCK_H + 30 + (d.saldoRestante > 0 ? SALDO_BLOCK_H + 30 : 0);
+
+  return HEADER_H + BODY_TOP + clienteH + vendasH + blocos + NOTA_H + FOOTER_H + BODY_BOTTOM;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function drawReceipt(mode) {
+  const d    = { ...dadosBase, ...modos[mode] };
+  const cv   = document.getElementById('receipt');
+  const H    = calcCanvasHeight(mode);
+  cv.width   = W;
+  cv.height  = H;
+  document.getElementById('canvas-wrapper').style.height = Math.round(H / 3) + 'px';
+  document.getElementById('sizeInfo').innerHTML =
+    `1080 × <strong>${H} px</strong> · ${d.vendas.length} venda(s) · ${d.saldoRestante > 0 ? 'com' : 'sem'} saldo restante`;
+
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#16162a'); bg.addColorStop(1, '#0f0f1e');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Cabeçalho coral ──
+  const hGrad = ctx.createLinearGradient(0, 0, W, HEADER_H);
+  hGrad.addColorStop(0, '#e8624a'); hGrad.addColorStop(1, '#c84336');
+  ctx.fillStyle = hGrad;
+  ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.lineTo(W, 0);
+  ctx.lineTo(W, HEADER_H - 70);
+  ctx.quadraticCurveTo(W, HEADER_H, W - 100, HEADER_H);
+  ctx.lineTo(100, HEADER_H);
+  ctx.quadraticCurveTo(0, HEADER_H, 0, HEADER_H - 70);
+  ctx.closePath();
+  ctx.fill();
+
+  // Círculo de fundo do logo
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.arc(W / 2, 118, 82, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Logo
+  if (logoImg.complete && logoImg.naturalWidth > 0) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(W / 2, 118, 70, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(logoImg, W / 2 - 70, 48, 140, 140);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 80px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('F', W / 2, 153);
+  }
+
+  // Textos do cabeçalho
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 62px Arial';
+  ctx.fillText('FiadoApp', W / 2, 260);
+
+  ctx.font = 'bold 46px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.97)';
+  ctx.fillText('Comprovante de Quitação', W / 2, 318);
+
+  ctx.font = '500 36px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
+  ctx.fillText(d.titulo, W / 2, 370);
+
+  // ── Corpo ──
+  ctx.textAlign = 'left';
+  let y = HEADER_H + BODY_TOP;
+
+  // Helper: título de seção
+  function sectionTitle(title) {
+    ctx.font = 'bold 32px Arial';
+    ctx.fillStyle = '#e8624a';
+    ctx.fillText(title.toUpperCase(), PAD, y);
+    ctx.strokeStyle = '#e8624a';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.moveTo(PAD, y + 14); ctx.lineTo(W - PAD, y + 14);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    y += SEC_TITLE_H;
+  }
+
+  // Helper: linha de info
+  function infoRow(label, value) {
+    ctx.font = '28px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.46)';
+    ctx.fillText(label, PAD, y);
+    y += 44;
+    ctx.font = 'bold 36px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(value, PAD, y);
+    y += 64;
+  }
+
+  // ── Dados do cliente ──
+  sectionTitle('Dados do Cliente');
+  infoRow('Cliente',         d.cliente);
+  infoRow('Referência',      d.referencia);
+  infoRow('Telefone',        d.telefone);
+  infoRow('Registrado por',  d.emitidoPor);
+  infoRow('Data de emissão', d.dataEmissao);
+  y += 14;
+
+  // ── Vendas quitadas ──
+  sectionTitle('Vendas Quitadas');
+
+  d.vendas.forEach((v, i) => {
+    const rowBg = i % 2 === 0 ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)';
+    ctx.fillStyle = rowBg;
+    ctx.beginPath();
+    ctx.roundRect(PAD - 26, y - 14, COL + 52, VENDA_ROW_H, 12);
+    ctx.fill();
+
+    ctx.font = 'bold 30px Arial';
+    ctx.fillStyle = '#e8624a';
+    ctx.textAlign = 'left';
+    ctx.fillText(`#${v.id}`, PAD, y + 28);
+
+    ctx.font = '26px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.textAlign = 'right';
+    ctx.fillText(v.data, W - PAD, y + 28);
+
+    ctx.textAlign = 'left';
+    ctx.font = '28px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
+    ctx.fillText(truncate(ctx, v.itens, COL - 200), PAD, y + 72);
+
+    ctx.font = 'bold 36px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'right';
+    ctx.fillText(brl(v.valor), W - PAD, y + 72);
+    ctx.textAlign = 'left';
+
+    y += VENDA_ROW_H + VENDA_GAP;
+  });
+
+  y += 22;
+
+  // ── Bloco total quitado ──
+  const tGrad = ctx.createLinearGradient(PAD - 26, y, W - PAD + 26, y);
+  tGrad.addColorStop(0, '#e8624a'); tGrad.addColorStop(1, '#c84336');
+  ctx.fillStyle = tGrad;
+  ctx.beginPath();
+  ctx.roundRect(PAD - 26, y, COL + 52, TOTAL_BLOCK_H, 16);
+  ctx.fill();
+
+  ctx.font = '32px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.82)';
+  ctx.textAlign = 'center';
+  ctx.fillText('VALOR TOTAL QUITADO', W / 2, y + 52);
+  ctx.font = 'bold 84px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(brl(d.totalQuitado), W / 2, y + 144);
+
+  y += TOTAL_BLOCK_H + 30;
+
+  // ── Bloco saldo restante (condicional) ──
+  if (d.saldoRestante > 0) {
+    ctx.fillStyle = 'rgba(255,180,60,0.10)';
+    ctx.strokeStyle = '#f0a030';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(PAD - 26, y, COL + 52, SALDO_BLOCK_H, 16);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '30px Arial';
+    ctx.fillStyle = '#f0a030';
+    ctx.textAlign = 'center';
+    ctx.fillText('SALDO RESTANTE EM ABERTO', W / 2, y + 46);
+    ctx.font = 'bold 66px Arial';
+    ctx.fillStyle = '#ffd080';
+    ctx.fillText(brl(d.saldoRestante), W / 2, y + 120);
+
+    y += SALDO_BLOCK_H + 30;
+  }
+
+  // ── Nota final ──
+  y += 10;
+  ctx.font = '26px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.34)';
+  ctx.textAlign = 'center';
+  // Quebra automática da nota
+  const notaWords = d.nota.split(' ');
+  let line = '';
+  for (const w of notaWords) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > COL) {
+      ctx.fillText(line, W / 2, y);
+      y += 38;
+      line = w;
+    } else { line = test; }
+  }
+  ctx.fillText(line, W / 2, y);
+  y += 38;
+
+  // ── Rodapé ──
+  y += 20;
+  ctx.font = '24px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.textAlign = 'center';
+  ctx.fillText('Gerado pelo FiadoApp', W / 2, y);
+}
+
+// Trigger inicial
+if (logoImg.complete && logoImg.naturalWidth > 0) drawReceipt(currentMode);
+
+function setMode(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  drawReceipt(mode);
+}
+
+function baixarImagem() {
+  const cv   = document.getElementById('receipt');
+  const link = document.createElement('a');
+  link.download = `comprovante_${currentMode}.png`;
+  link.href     = cv.toDataURL('image/png');
+  link.click();
+}
+</script>
+</body>
+</html>

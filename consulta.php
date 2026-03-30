@@ -53,6 +53,21 @@ require_once __DIR__ . '/includes/header.php';
 
 </main>
 
+<!-- Modal: Confirmar exclusão de cliente -->
+<div id="modalExcluirCliente" class="modal-overlay">
+    <div class="modal-box">
+        <h3 class="modal-title">⚠️ Excluir Cliente</h3>
+        <p class="modal-body">
+            Tem certeza que deseja excluir <strong id="modalExcluirClienteNome"></strong>?<br>
+            <span style="color:#e53e3e; font-size:13px;">Todas as vendas e pagamentos deste cliente serão excluídos permanentemente.</span>
+        </p>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="fecharModalExcluirCliente()">Cancelar</button>
+            <button class="btn-danger" id="btnConfirmarExcluirCliente">Excluir</button>
+        </div>
+    </div>
+</div>
+
 <?php
 $footerScripts = <<<'SCRIPT'
 <script src="/assets/js/consulta.js"></script>

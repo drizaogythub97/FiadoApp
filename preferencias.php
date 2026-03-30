@@ -5,24 +5,36 @@ require_once __DIR__ . '/config/conexao.php';
 
 $usuario_id = $_SESSION['usuario_id'];
 
-// Busca configurações atuais do usuário
-$stmt = $pdo->prepare("SELECT limite_credito_padrao FROM usuarios WHERE id = ?");
-$stmt->execute([$usuario_id]);
-$usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-$limitePadrao = $usuario['limite_credito_padrao'] ?? '';
+$limitePadrao = '';
+$clientes = [];
+$erroPreferencias = null;
 
-// Busca clientes com seus limites individuais
-$stmtClientes = $pdo->prepare("
-    SELECT id, nome, sobrenome, referencia, limite_credito,
-           COALESCE(SUM(CASE WHEN v.status = 'ATIVA' THEN v.valor_total ELSE 0 END), 0) AS saldo_devedor
-    FROM clientes c
-    LEFT JOIN vendas v ON v.cliente_id = c.id AND v.usuario_id = c.usuario_id
-    WHERE c.usuario_id = ?
-    GROUP BY c.id
-    ORDER BY c.nome ASC
-");
-$stmtClientes->execute([$usuario_id]);
-$clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
+try {
+    // Busca configurações atuais do usuário
+    $stmt = $pdo->prepare("SELECT limite_credito_padrao FROM usuarios WHERE id = ?");
+    $stmt->execute([$usuario_id]);
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+    $limitePadrao = $usuario['limite_credito_padrao'] ?? '';
+} catch (PDOException $e) {
+    $erroPreferencias = 'Erro ao carregar preferências do usuário.';
+}
+
+try {
+    // Busca clientes com seus limites individuais
+    $stmtClientes = $pdo->prepare("
+        SELECT c.id, c.nome, c.sobrenome, c.referencia, c.limite_credito,
+               COALESCE(SUM(CASE WHEN v.status = 'ATIVA' THEN v.valor_total ELSE 0 END), 0) AS saldo_devedor
+        FROM clientes c
+        LEFT JOIN vendas v ON v.cliente_id = c.id AND v.usuario_id = c.usuario_id
+        WHERE c.usuario_id = ?
+        GROUP BY c.id, c.nome, c.sobrenome, c.referencia, c.limite_credito
+        ORDER BY c.nome ASC
+    ");
+    $stmtClientes->execute([$usuario_id]);
+    $clientes = $stmtClientes->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $erroPreferencias = ($erroPreferencias ? $erroPreferencias . ' ' : '') . 'Erro ao carregar lista de clientes.';
+}
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -35,6 +47,12 @@ require_once __DIR__ . '/includes/header.php';
         <h2 class="page-title">⚙️ Preferências</h2>
         <p class="page-subtitle">Configure limites de crédito e comportamentos padrão.</p>
     </div>
+
+    <?php if ($erroPreferencias): ?>
+    <div class="alert alert-error" style="margin-bottom:16px; padding:12px 16px; background:#fff0f0; border:1px solid #f5c6cb; border-radius:8px; color:#a00;">
+        ⚠️ <?= htmlspecialchars($erroPreferencias) ?>
+    </div>
+    <?php endif; ?>
 
     <!-- LIMITE PADRÃO -->
     <div class="pref-section">

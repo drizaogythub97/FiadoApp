@@ -141,6 +141,10 @@ require_once __DIR__ . '/includes/header.php';
             📲 Cobrar pelo WhatsApp
         </a>
         <?php endif; ?>
+        <button class="btn-danger-outline"
+                onclick="confirmarExcluirCliente(<?= $cliente_id ?>, '<?= addslashes($cliente['nome'] . (!empty($cliente['sobrenome']) ? ' ' . $cliente['sobrenome'] : '')) ?>')">
+            🗑️ Excluir Cliente
+        </button>
     </div>
 
     <div style="margin-top:12px;">
@@ -157,6 +161,28 @@ $footerScripts = <<<'SCRIPT'
 function abrirWhatsApp(e, el) {
     e.preventDefault();
     window.location.href = el.href;
+}
+
+async function confirmarExcluirCliente(clienteId, nomeCliente) {
+    const confirmado = await abrirModal({
+        titulo:       '⚠️ Excluir Cliente',
+        mensagem:     'Tem certeza que deseja excluir ' + nomeCliente + '? Todas as vendas e pagamentos deste cliente serão excluídos permanentemente.',
+        btnConfirmar: '🗑️ Excluir',
+        btnClasse:    'danger'
+    });
+    if (!confirmado) return;
+    const res  = await fetch('/api/excluir_cliente.php', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ cliente_id: clienteId })
+    });
+    const json = await res.json();
+    if (json.status === 'sucesso') {
+        showToast('Cliente excluído!', 'success');
+        setTimeout(() => { window.location.href = '/consulta.php'; }, 900);
+    } else {
+        showToast(json.mensagem || 'Erro ao excluir cliente.', 'error');
+    }
 }
 </script>
 SCRIPT;

@@ -153,6 +153,7 @@ function renderizarClientes(clientes) {
             <div class="cliente-actions">
                 <button class="btn-primary" onclick="detalharCliente(${cliente.cliente_id},'${volta}')">Detalhar</button>
                 <a href="/cadastro.php?cliente_id=${cliente.cliente_id}" class="btn-nova-venda">➕ Nova Venda</a>
+                <button class="btn-danger-outline" onclick="confirmarExcluirCliente(${cliente.cliente_id}, '${(cliente.nome + (cliente.sobrenome ? ' ' + cliente.sobrenome : '')).replace(/'/g, "\\'")}')">🗑️</button>
             </div>
         `;
         lista.appendChild(card);
@@ -173,3 +174,40 @@ function detalharCliente(id, volta) {
     const letra  = params.get('letra');
     setTimeout(() => selecionarLetra(letra ? letra.toUpperCase() : 'TODOS'), 50);
 })();
+
+// ── Excluir cliente ───────────────────────────────────────────────────────
+function confirmarExcluirCliente(clienteId, nomeCliente) {
+    const modal = document.getElementById('modalExcluirCliente');
+    document.getElementById('modalExcluirClienteNome').textContent = nomeCliente;
+    document.getElementById('btnConfirmarExcluirCliente').onclick = () => excluirCliente(clienteId);
+    modal.classList.add('active');
+}
+
+function fecharModalExcluirCliente() {
+    document.getElementById('modalExcluirCliente').classList.remove('active');
+}
+
+async function excluirCliente(clienteId) {
+    fecharModalExcluirCliente();
+    try {
+        const res = await fetch('/api/excluir_cliente.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cliente_id: clienteId })
+        });
+        const json = await res.json();
+        if (json.status === 'sucesso') {
+            showToast('Cliente excluído com sucesso', 'success');
+            // Recarrega a lista após exclusão
+            setTimeout(() => {
+                const params = new URLSearchParams(window.location.search);
+                const letra  = params.get('letra');
+                selecionarLetra(letraAtiva || 'TODOS');
+            }, 800);
+        } else {
+            showToast(json.mensagem || 'Erro ao excluir cliente', 'error');
+        }
+    } catch (e) {
+        showToast('Erro de conexão', 'error');
+    }
+}

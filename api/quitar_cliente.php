@@ -18,6 +18,7 @@ $input      = json_decode(file_get_contents("php://input"), true);
 
 $cliente_id = $input['cliente_id'] ?? null;
 $tipo       = $input['tipo']       ?? null;
+$formato    = $input['formato']    ?? 'pdf';
 
 if (!$cliente_id || !$tipo) {
     echo json_encode(["status"=>"erro","mensagem"=>"Dados inválidos"]);
@@ -74,8 +75,10 @@ try {
             $vendasQuitadas[] = $venda;
         }
 
+        $saldoRestante = 0;
         if ($valorPago < $totalAberto) {
             $restante    = $totalAberto - $valorPago;
+            $saldoRestante = $restante;
             $hoje        = date('Y-m-d');                        // usa fuso America/Sao_Paulo do topo
             $vencRestant = date('Y-m-d', strtotime('+30 days')); // idem
 
@@ -100,13 +103,56 @@ try {
         throw new Exception("Tipo inválido.");
     }
 
-    // ── Gerar PDF ──────────────────────────────────────────────────────────
+    // ── Dados do cliente e usuário para resposta ───────────────────────────
+    $stmtUsr = $pdo->prepare("SELECT nome FROM usuarios WHERE id = ?");
+    $stmtUsr->execute([$usuario_id]);
+    $usuarioNome = $stmtUsr->fetch(PDO::FETCH_ASSOC)['nome'] ?? '';
 
-    $pdfPath = gerarPDF($pdo, $vendasQuitadas, $totalQuitado, $usuario_id);
+    $stmtCli = $pdo->prepare("SELECT nome, sobrenome, referencia, telefone FROM clientes WHERE id = ?");
+    $stmtCli->execute([$vendasQuitadas[0]['cliente_id']]);
+    $clienteRow = $stmtCli->fetch(PDO::FETCH_ASSOC);
+
+    $titulosMap = [
+        'todas'        => 'Quitação Total',
+        'selecionadas' => 'Vendas Selecionadas',
+        'parcial'      => 'Quitação Parcial',
+    ];
+
+    $vendasParaImagem = array_map(function($v) use ($pdo) {
+        $si = $pdo->prepare("SELECT descricao, quantidade FROM itens_venda WHERE venda_id = ? LIMIT 10");
+        $si->execute([$v['id']]);
+        $itens = $si->fetchAll(PDO::FETCH_ASSOC);
+        $itensStr = implode(', ', array_map(fn($i) => $i['quantidade'].'x '.$i['descricao'], $itens));
+        return [
+            'id'    => $v['id'],
+            'data'  => date('d/m/Y', strtotime($v['data_compra'])),
+            'itens' => $itensStr ?: 'Sem itens',
+            'valor' => (float) $v['valor_total'],
+        ];
+    }, $vendasQuitadas);
+
+    $dadosImagem = [
+        'emitidoPor'   => $usuarioNome,
+        'cliente'      => trim($clienteRow['nome'] . ' ' . ($clienteRow['sobrenome'] ?? '')),
+        'referencia'   => $clienteRow['referencia'] ?? '',
+        'telefone'     => $clienteRow['telefone']   ?? '',
+        'dataEmissao'  => date('d/m/Y H:i'),
+        'titulo'       => $titulosMap[$tipo] ?? 'Comprovante',
+        'vendas'       => $vendasParaImagem,
+        'totalQuitado' => (float) $totalQuitado,
+        'saldoRestante'=> (float) ($saldoRestante ?? 0),
+        'nota'         => 'Este documento confirma a quitação das vendas registradas no sistema FiadoApp.',
+    ];
+
+    // ── Gerar PDF (somente se formato for pdf) ────────────────────────────
+    $pdfPath = null;
+    if ($formato === 'pdf') {
+        $pdfPath = gerarPDF($pdo, $vendasQuitadas, $totalQuitado, $usuario_id, $saldoRestante ?? 0);
+    }
 
     $pdo->commit();
 
-    echo json_encode(["status" => "sucesso", "pdf" => $pdfPath]);
+    echo json_encode(["status" => "sucesso", "pdf" => $pdfPath, "dados" => $dadosImagem]);
 
 } catch (Exception $e) {
     $pdo->rollBack();
@@ -127,7 +173,7 @@ function registrarPagamento($pdo, $venda, $usuario_id) {
     $stmt->execute([$agora, $venda['id']]);
 }
 
-function gerarPDF($pdo, $vendasQuitadas, $totalQuitado, $usuario_id) {
+function gerarPDF($pdo, $vendasQuitadas, $totalQuitado, $usuario_id, $saldoRestante = 0) {
 
     // ── Dados do usuário e cliente ──
     $stmt = $pdo->prepare("SELECT nome FROM usuarios WHERE id=?");
@@ -179,8 +225,14 @@ function gerarPDF($pdo, $vendasQuitadas, $totalQuitado, $usuario_id) {
 
     $pdf->VendaTotal($totalQuitado);
 
-    // ── Destaque do valor quitado e nota final ──
+    // ── Destaque do valor quitado ──
     $pdf->ValorDestaque('Valor Total Quitado', $totalQuitado);
+
+    // ── Saldo restante (apenas se houver) ──
+    if ($saldoRestante > 0) {
+        $pdf->SaldoRestante($saldoRestante);
+    }
+
     $pdf->NotaFinal('Este documento confirma a quitação das vendas registradas no sistema FiadoApp.');
 
     // ── Salva em disco e retorna o caminho ──

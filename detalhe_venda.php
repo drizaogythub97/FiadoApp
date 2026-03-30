@@ -90,6 +90,7 @@ require_once __DIR__ . '/includes/header.php';
             <button class="btn-secondary" onclick="baixarComprovante(<?= $venda['id'] ?>)">📄 Gerar Comprovante</button>
         <?php endif; ?>
         <a href="/<?= htmlspecialchars($voltaURL) ?>" class="btn-secondary">← Voltar</a>
+        <button class="btn-danger-outline" onclick="confirmarExcluirVenda(<?= $venda['id'] ?>, <?= (int)$venda['cliente_id'] ?>)">🗑️ Excluir Venda</button>
     </div>
 
 </section>
@@ -126,6 +127,30 @@ async function marcarComoPaga(id) {
 async function baixarComprovante(id) {
     showToast('Gerando comprovante...');
     await baixarPDF('/api/gerar_pdf.php?id=' + id);
+}
+
+async function confirmarExcluirVenda(vendaId, clienteId) {
+    const confirmado = await abrirModal({
+        titulo:       '⚠️ Excluir Venda',
+        mensagem:     'Tem certeza que deseja excluir esta venda? Todos os itens e pagamentos vinculados serão excluídos permanentemente.',
+        btnConfirmar: '🗑️ Excluir',
+        btnClasse:    'danger'
+    });
+    if (!confirmado) return;
+    const res  = await fetch('/api/excluir_venda.php', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ venda_id: vendaId })
+    });
+    const json = await res.json();
+    if (json.status === 'sucesso') {
+        showToast('Venda excluída!', 'success');
+        setTimeout(() => {
+            window.location.href = '/cliente_detalhe.php?id=' + clienteId;
+        }, 900);
+    } else {
+        showToast(json.mensagem || 'Erro ao excluir venda.', 'error');
+    }
 }
 </script>
 SCRIPT;

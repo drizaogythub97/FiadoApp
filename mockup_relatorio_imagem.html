@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Relatório em Imagem</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 40px 16px 70px;
+    gap: 26px;
+  }
+  h1 {
+    color: #fff; font-size: 13px; font-weight: 400;
+    opacity: .5; letter-spacing: 1.5px; text-transform: uppercase; text-align: center;
+  }
+  .controls {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 14px; width: 100%; max-width: 400px;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  label { color: rgba(255,255,255,.5); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .range-row { display: flex; align-items: center; gap: 10px; }
+  input[type=range] { width: 100%; accent-color: #e8624a; }
+  .range-value { color: #e8624a; font-size: 14px; font-weight: 700; min-width: 36px; text-align: right; }
+  select {
+    width: 100%; background: rgba(255,255,255,0.07); color: #fff;
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; font-family: inherit; cursor: pointer;
+  }
+  select option { background: #1a1a2e; }
+  #canvas-wrapper {
+    width: 360px; border-radius: 14px;
+    overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.7);
+  }
+  canvas { display: block; width: 100%; }
+  .info-badges { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .badge {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.55); font-size: 11px; padding: 5px 14px; border-radius: 20px;
+  }
+  .badge strong { color: rgba(255,255,255,0.85); }
+  .btn-download {
+    background: #e8624a; color: #fff; border: none;
+    padding: 13px 32px; border-radius: 10px; font-size: 14px;
+    font-weight: 600; cursor: pointer; letter-spacing: .5px;
+    transition: background .2s; font-family: inherit;
+  }
+  .btn-download:hover { background: #c94e38; }
+</style>
+</head>
+<body>
+
+<h1>Mockup — Relatório em Imagem<br>Largura fixa · Altura dinâmica por registros</h1>
+
+<div class="controls">
+  <div class="control-group">
+    <label>Quantidade de vendas</label>
+    <div class="range-row">
+      <input type="range" id="numVendas" min="1" max="15" value="4" oninput="update()">
+      <span class="range-value" id="numVendasVal">4</span>
+    </div>
+  </div>
+  <div class="control-group">
+    <label>Filtro de status</label>
+    <select id="filtroStatus" onchange="update()">
+      <option value="todos">Todas as vendas</option>
+      <option value="ATIVA">Somente ativas</option>
+      <option value="PAGA">Somente pagas</option>
+    </select>
+  </div>
+</div>
+
+<div id="info-badges" class="info-badges"></div>
+
+<div id="canvas-wrapper">
+  <canvas id="report"></canvas>
+</div>
+
+<button class="btn-download" onclick="baixarImagem()">⬇ Baixar PNG</button>
+
+<script>
+// ── Logo ──────────────────────────────────────────────────────────────────────
+const logoImg = new Image();
+logoImg.src = '/assets/img/logo.png';
+logoImg.onload  = update;
+logoImg.onerror = update;
+
+// ── Dados de exemplo realistas ────────────────────────────────────────────────
+const vendaPool = [
+  { id: 101, cliente: 'João Silva',        ref: 'Centro',       data: '02/03/2025', venc: '01/04/2025', status: 'ATIVA', total: 67.50,
+    itens: [{ desc: 'Arroz 5kg', qtd: 2, unit: 18.90, sub: 37.80 }, { desc: 'Feijão 1kg', qtd: 1, unit: 9.50, sub: 9.50 }, { desc: 'Óleo de Soja', qtd: 2, unit: 10.10, sub: 20.20 }] },
+  { id: 102, cliente: 'Maria Oliveira',    ref: 'Vila Nova',    data: '05/03/2025', venc: '04/04/2025', status: 'PAGA',  total: 43.20,
+    itens: [{ desc: 'Macarrão', qtd: 3, unit: 4.50, sub: 13.50 }, { desc: 'Molho de Tomate', qtd: 2, unit: 5.90, sub: 11.80 }, { desc: 'Sal', qtd: 1, unit: 2.90, sub: 2.90 }] },
+  { id: 103, cliente: 'Carlos Souza',      ref: 'Jd. das Flores',data:'08/03/2025', venc: '07/04/2025', status: 'ATIVA', total: 115.00,
+    itens: [{ desc: 'Carne Bovina 1kg', qtd: 2, unit: 42.00, sub: 84.00 }, { desc: 'Frango 1kg', qtd: 1, unit: 18.00, sub: 18.00 }, { desc: 'Ovos (dúzia)', qtd: 1, unit: 13.00, sub: 13.00 }] },
+  { id: 104, cliente: 'Ana Costa',         ref: 'Bairro Alto',  data: '10/03/2025', venc: '09/04/2025', status: 'PAGA',  total: 28.60,
+    itens: [{ desc: 'Leite integral 1L', qtd: 4, unit: 5.50, sub: 22.00 }, { desc: 'Manteiga 200g', qtd: 1, unit: 6.60, sub: 6.60 }] },
+  { id: 105, cliente: 'Pedro Ferreira',    ref: 'São Jorge',    data: '12/03/2025', venc: '11/04/2025', status: 'ATIVA', total: 88.90,
+    itens: [{ desc: 'Açúcar 5kg', qtd: 1, unit: 24.90, sub: 24.90 }, { desc: 'Farinha de Trigo', qtd: 2, unit: 9.50, sub: 19.00 }, { desc: 'Biscoito pacote', qtd: 5, unit: 9.00, sub: 45.00 }] },
+  { id: 106, cliente: 'Fernanda Rocha',    ref: 'Ipiranga',     data: '14/03/2025', venc: '13/04/2025', status: 'PAGA',  total: 52.40,
+    itens: [{ desc: 'Sabão em pó 1kg', qtd: 2, unit: 14.90, sub: 29.80 }, { desc: 'Detergente', qtd: 4, unit: 2.80, sub: 11.20 }, { desc: 'Esponja (par)', qtd: 2, unit: 5.70, sub: 11.40 }] },
+  { id: 107, cliente: 'Lucas Martins',     ref: 'Recanto Sul',  data: '16/03/2025', venc: '15/04/2025', status: 'ATIVA', total: 74.00,
+    itens: [{ desc: 'Cerveja lata cx', qtd: 1, unit: 59.00, sub: 59.00 }, { desc: 'Refrigerante 2L', qtd: 3, unit: 5.00, sub: 15.00 }] },
+  { id: 108, cliente: 'Juliana Lima',      ref: 'Jardim Europa', data:'18/03/2025', venc: '17/04/2025', status: 'ATIVA', total: 33.80,
+    itens: [{ desc: 'Shampoo 400ml', qtd: 1, unit: 14.90, sub: 14.90 }, { desc: 'Condicionador', qtd: 1, unit: 12.90, sub: 12.90 }, { desc: 'Sabonete', qtd: 3, unit: 2.00, sub: 6.00 }] },
+  { id: 109, cliente: 'Rafael Alves',      ref: 'Boa Vista',    data: '20/03/2025', venc: '19/04/2025', status: 'PAGA',  total: 49.50,
+    itens: [{ desc: 'Pão de Forma', qtd: 2, unit: 8.50, sub: 17.00 }, { desc: 'Queijo fatiado', qtd: 1, unit: 22.50, sub: 22.50 }, { desc: 'Presunto', qtd: 1, unit: 10.00, sub: 10.00 }] },
+  { id: 110, cliente: 'Beatriz Nunes',     ref: 'São Cristóvão', data:'22/03/2025', venc: '21/04/2025', status: 'ATIVA', total: 97.30,
+    itens: [{ desc: 'Café 500g', qtd: 3, unit: 15.90, sub: 47.70 }, { desc: 'Açúcar refinado', qtd: 2, unit: 12.50, sub: 25.00 }, { desc: 'Leite em pó', qtd: 1, unit: 24.60, sub: 24.60 }] },
+  { id: 111, cliente: 'Diego Barbosa',     ref: 'Parque das Águas', data:'24/03/2025', venc:'23/04/2025', status:'PAGA', total: 61.00,
+    itens: [{ desc: 'Fraldas M', qtd: 1, unit: 49.00, sub: 49.00 }, { desc: 'Lenço umedecido', qtd: 2, unit: 6.00, sub: 12.00 }] },
+  { id: 112, cliente: 'Camila Dias',       ref: 'Novo Horizonte', data:'26/03/2025', venc:'25/04/2025', status:'ATIVA', total: 140.00,
+    itens: [{ desc: 'Botijão de gás', qtd: 1, unit: 120.00, sub: 120.00 }, { desc: 'Isqueiro', qtd: 4, unit: 5.00, sub: 20.00 }] },
+  { id: 113, cliente: 'Henrique Pinto',    ref: 'Morada Verde', data: '27/03/2025', venc: '26/04/2025', status: 'PAGA',  total: 38.20,
+    itens: [{ desc: 'Vinagre 750ml', qtd: 2, unit: 4.50, sub: 9.00 }, { desc: 'Azeite 200ml', qtd: 1, unit: 18.70, sub: 18.70 }, { desc: 'Tempero pronto', qtd: 3, unit: 3.50, sub: 10.50 }] },
+  { id: 114, cliente: 'Vanessa Melo',      ref: 'Santa Cruz',   data: '28/03/2025', venc: '27/04/2025', status: 'ATIVA', total: 55.80,
+    itens: [{ desc: 'Iogurte 1kg', qtd: 2, unit: 12.90, sub: 25.80 }, { desc: 'Queijo coalho', qtd: 1, unit: 18.00, sub: 18.00 }, { desc: 'Requeijão 200g', qtd: 2, unit: 6.00, sub: 12.00 }] },
+  { id: 115, cliente: 'Thiago Gomes',      ref: 'Pinheiros',    data: '29/03/2025', venc: '28/04/2025', status: 'PAGA',  total: 82.40,
+    itens: [{ desc: 'Arroz 5kg', qtd: 1, unit: 18.90, sub: 18.90 }, { desc: 'Feijão 1kg', qtd: 2, unit: 9.50, sub: 19.00 }, { desc: 'Macarrão', qtd: 4, unit: 4.50, sub: 18.00 }, { desc: 'Molho de Tomate', qtd: 4, unit: 5.90, sub: 23.60 }, { desc: 'Sal 1kg', qtd: 1, unit: 2.90, sub: 2.90 }] },
+];
+
+function brl(v) {
+  return 'R$ ' + parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// ── Constantes de layout ──────────────────────────────────────────────────────
+const W            = 1080;
+const PAD          = 72;
+const COL          = W - PAD * 2;
+const HEADER_H     = 310;
+const BODY_TOP     = 60;
+const SUMMARY_H    = 220;   // cards de resumo
+const SUMMARY_GAP  = 50;
+const SEC_TITLE_H  = 72;
+const VENDA_HEAD_H = 116;   // cabeçalho da venda (cliente + data)
+const ITEM_H       = 82;    // cada item — mais espaço para label + valor
+const VENDA_FOOT_H = 92;    // linha de total da venda
+const VENDA_SEP    = 36;    // espaço entre vendas
+const TOTAL_H      = 110;   // linha de total geral
+const FOOTER_H     = 100;
+const BODY_BOTTOM  = 50;
+
+function calcHeight(vendas) {
+  let vendasH = 0;
+  vendas.forEach(v => {
+    vendasH += VENDA_HEAD_H + v.itens.length * ITEM_H + VENDA_FOOT_H + VENDA_SEP;
+  });
+  return HEADER_H + BODY_TOP + SUMMARY_H + SUMMARY_GAP + SEC_TITLE_H + vendasH + TOTAL_H + FOOTER_H + BODY_BOTTOM;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function drawReport(vendas, filtroStatus) {
+  const cv      = document.getElementById('report');
+  const H       = calcHeight(vendas);
+  cv.width      = W;
+  cv.height     = H;
+  document.getElementById('canvas-wrapper').style.height = Math.round(H / 3) + 'px';
+
+  const totalGeral  = vendas.reduce((s,v) => s + v.total, 0);
+  const totalAtivas = vendas.filter(v => v.status === 'ATIVA').reduce((s,v) => s + v.total, 0);
+  const totalPagas  = vendas.filter(v => v.status === 'PAGA').reduce((s,v) => s + v.total, 0);
+
+  // badges
+  const statusLabel = { todos:'Todas', ATIVA:'Somente Ativas', PAGA:'Somente Pagas' };
+  document.getElementById('info-badges').innerHTML = `
+    <span class="badge">Vendas: <strong>${vendas.length}</strong></span>
+    <span class="badge">Total: <strong>${brl(totalGeral)}</strong></span>
+    <span class="badge">Altura: <strong>${H} px</strong></span>
+    <span class="badge">Filtro: <strong>${statusLabel[filtroStatus]}</strong></span>
+  `;
+
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#13131f';
+  ctx.fillRect(0, 0, W, H);
+
+  // Listra lateral coral
+  const stripeGrad = ctx.createLinearGradient(0, 0, 0, H * 0.6);
+  stripeGrad.addColorStop(0, '#e8624a');
+  stripeGrad.addColorStop(1, 'rgba(232,98,74,0)');
+  ctx.fillStyle = stripeGrad;
+  ctx.fillRect(0, 0, 8, H);
+
+  // ── Cabeçalho ──
+  const hGrad = ctx.createLinearGradient(0, 0, W, HEADER_H);
+  hGrad.addColorStop(0, '#e8624a'); hGrad.addColorStop(1, '#b83628');
+  ctx.fillStyle = hGrad;
+  ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.lineTo(W, 0);
+  ctx.lineTo(W, HEADER_H - 55);
+  ctx.quadraticCurveTo(W, HEADER_H, W - 90, HEADER_H);
+  ctx.lineTo(90, HEADER_H);
+  ctx.quadraticCurveTo(0, HEADER_H, 0, HEADER_H - 55);
+  ctx.closePath();
+  ctx.fill();
+
+  // Logo
+  const logoSz = 86;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(PAD + logoSz / 2, 90, logoSz / 2, 0, Math.PI * 2);
+  ctx.clip();
+  if (logoImg.complete && logoImg.naturalWidth > 0) {
+    ctx.drawImage(logoImg, PAD, 47, logoSz, logoSz);
+  } else {
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 52px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('F', PAD + logoSz / 2, 108);
+  }
+  ctx.restore();
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 54px Arial';
+  ctx.fillText('FiadoApp', PAD + logoSz + 22, 82);
+
+  ctx.font = 'bold 38px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.fillText('Relatório de Vendas', PAD + logoSz + 22, 134);
+
+  ctx.font = '28px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.58)';
+  ctx.fillText(`Emitido em 30/03/2025 · por Maria da Loja`, PAD + logoSz + 22, 178);
+
+  // Filtro aplicado (canto direito)
+  const fLabel = { todos: 'Todas as vendas', ATIVA: 'Somente ativas', PAGA: 'Somente pagas' }[filtroStatus];
+  ctx.textAlign = 'right';
+  ctx.font = '26px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText(fLabel, W - PAD, 260);
+  ctx.fillText('Mar/2025', W - PAD, 240);
+
+  // ── Cards de resumo ──
+  let y = HEADER_H + BODY_TOP;
+  const cards = [
+    { label: 'Registros',      value: String(vendas.length), cor: '#4a9eff' },
+    { label: 'Total Geral',    value: brl(totalGeral),       cor: '#e8624a' },
+    { label: filtroStatus === 'PAGA' ? 'Total Pago' : 'A Receber',
+      value: filtroStatus === 'PAGA' ? brl(totalPagas) : brl(totalAtivas),  cor: '#3ec98a' },
+  ];
+  const cardW = Math.floor((COL - 24) / 3);
+  const cardH = SUMMARY_H - 20;
+
+  cards.forEach((c, i) => {
+    const cx = PAD + i * (cardW + 12);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.beginPath(); ctx.roundRect(cx, y, cardW, cardH, 14); ctx.fill();
+
+    ctx.strokeStyle = c.cor; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(cx, y, cardW, cardH, 14); ctx.stroke();
+
+    // Barra topo
+    ctx.fillStyle = c.cor;
+    ctx.beginPath(); ctx.roundRect(cx, y, cardW, 6, [3,3,0,0]); ctx.fill();
+
+    ctx.textAlign = 'center';
+    ctx.font = '26px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText(c.label, cx + cardW / 2, y + 60);
+
+    ctx.font = 'bold 34px Arial';
+    ctx.fillStyle = c.cor;
+    let txt = c.value;
+    while (ctx.measureText(txt).width > cardW - 16 && txt.length > 4) txt = txt.slice(0,-4)+'…';
+    ctx.fillText(txt, cx + cardW / 2, y + 108);
+
+    ctx.textAlign = 'left';
+  });
+
+  y += SUMMARY_H + SUMMARY_GAP;
+
+  // ── Título da seção ──
+  ctx.font = 'bold 30px Arial';
+  ctx.fillStyle = '#e8624a';
+  ctx.fillText('VENDAS', PAD, y);
+  ctx.strokeStyle = '#e8624a';
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath();
+  ctx.moveTo(PAD, y + 12); ctx.lineTo(W - PAD, y + 12);
+  ctx.stroke(); ctx.globalAlpha = 1;
+  y += SEC_TITLE_H;
+
+  // ── Registros de venda ──
+  const statusCor = { ATIVA: '#f0a030', PAGA: '#3ec98a' };
+
+  vendas.forEach((v, vi) => {
+    // Fundo do bloco inteiro da venda
+    const blockH = VENDA_HEAD_H + v.itens.length * ITEM_H + VENDA_FOOT_H;
+    const rowBg  = vi % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.07)';
+    ctx.fillStyle = rowBg;
+    ctx.beginPath();
+    ctx.roundRect(PAD - 26, y - 8, COL + 52, blockH + 16, 14);
+    ctx.fill();
+
+    // Borda esquerda colorida por status
+    const sc = statusCor[v.status] || '#888';
+    ctx.fillStyle = sc;
+    ctx.beginPath();
+    ctx.roundRect(PAD - 26, y - 8, 6, blockH + 16, [3,0,0,3]);
+    ctx.fill();
+
+    // ── Cabeçalho da venda: #ID + Cliente + data ──
+    ctx.font = 'bold 32px Arial';
+    ctx.fillStyle = '#e8624a';
+    ctx.textAlign = 'left';
+    ctx.fillText(`#${v.id}`, PAD + 12, y + 36);
+
+    // Badge de status
+    const badgeW = 148, badgeH = 40;
+    const badgeCor = sc;
+    ctx.fillStyle = badgeCor + '22';
+    ctx.strokeStyle = badgeCor; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(PAD + 12 + 92, y + 10, badgeW, badgeH, 8);
+    ctx.fill(); ctx.stroke();
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = badgeCor;
+    ctx.textAlign = 'center';
+    ctx.fillText(v.status, PAD + 12 + 92 + badgeW / 2, y + 38);
+    ctx.textAlign = 'left';
+
+    // Cliente + ref
+    ctx.font = 'bold 34px Arial';
+    ctx.fillStyle = '#ffffff';
+    const nomeRef = v.ref ? `${v.cliente}  (${v.ref})` : v.cliente;
+    ctx.fillText(nomeRef, PAD + 12, y + 84);
+
+    // Datas à direita
+    ctx.textAlign = 'right';
+    ctx.font = '26px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.48)';
+    ctx.fillText(`Compra: ${v.data}`, W - PAD - 12, y + 34);
+    ctx.fillText(`Vence: ${v.venc}`, W - PAD - 12, y + 68);
+    ctx.textAlign = 'left';
+
+    y += VENDA_HEAD_H;
+
+    // ── Itens da venda ──
+    v.itens.forEach((it, ii) => {
+      const itemBg = ii % 2 === 0 ? 'rgba(0,0,0,0.14)' : 'rgba(0,0,0,0.07)';
+      ctx.fillStyle = itemBg;
+      ctx.fillRect(PAD - 20, y, COL + 40, ITEM_H);
+
+      // Separador topo do item
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(PAD - 20, y); ctx.lineTo(W - PAD + 20, y);
+      ctx.stroke();
+
+      const midY = y + ITEM_H / 2;
+
+      // Ícone ›
+      ctx.font = '28px Arial';
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.textAlign = 'left';
+      ctx.fillText('›', PAD + 16, midY + 10);
+
+      // Descrição
+      ctx.font = '30px Arial';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillText(it.desc, PAD + 48, midY + 10);
+
+      // Qtd × Unitário (linha superior à direita)
+      ctx.textAlign = 'right';
+      ctx.font = '24px Arial';
+      ctx.fillStyle = 'rgba(255,255,255,0.46)';
+      ctx.fillText(`${it.qtd}x  ×  R$ ${it.unit.toFixed(2).replace('.', ',')}`, W - PAD - 12, midY - 6);
+
+      // Subtotal (linha inferior à direita, em destaque)
+      ctx.font = 'bold 32px Arial';
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fillText(brl(it.sub), W - PAD - 12, midY + 26);
+      ctx.textAlign = 'left';
+
+      y += ITEM_H;
+    });
+
+    // ── Rodapé da venda: total ──
+    ctx.fillStyle = 'rgba(232,98,74,0.10)';
+    ctx.fillRect(PAD - 20, y, COL + 40, VENDA_FOOT_H);
+
+    // separador
+    ctx.strokeStyle = 'rgba(232,98,74,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD - 20, y); ctx.lineTo(W - PAD + 20, y);
+    ctx.stroke();
+
+    const footMid = y + VENDA_FOOT_H / 2;
+    ctx.font = 'bold 30px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Total da venda  (${v.itens.length} iten${v.itens.length > 1?'s':''})`, PAD + 12, footMid + 12);
+
+    ctx.font = 'bold 44px Arial';
+    ctx.fillStyle = '#e8624a';
+    ctx.textAlign = 'right';
+    ctx.fillText(brl(v.total), W - PAD - 12, footMid + 14);
+    ctx.textAlign = 'left';
+
+    y += VENDA_FOOT_H + VENDA_SEP;
+  });
+
+  // ── Linha de total geral ──
+  y += 4;
+  const tGrad = ctx.createLinearGradient(PAD - 26, y, W - PAD + 26, y);
+  tGrad.addColorStop(0, '#e8624a'); tGrad.addColorStop(1, '#c84336');
+  ctx.fillStyle = tGrad;
+  ctx.beginPath(); ctx.roundRect(PAD - 26, y, COL + 52, TOTAL_H, 12); ctx.fill();
+
+  ctx.font = 'bold 32px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.82)';
+  ctx.textAlign = 'left';
+  ctx.fillText(`TOTAL GERAL  (${vendas.length} venda${vendas.length>1?'s':''})`, PAD + 12, y + TOTAL_H * 0.62);
+
+  ctx.font = 'bold 48px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'right';
+  ctx.fillText(brl(totalGeral), W - PAD - 12, y + TOTAL_H * 0.66);
+  ctx.textAlign = 'left';
+
+  y += TOTAL_H + FOOTER_H * 0.4;
+
+  // ── Rodapé ──
+  ctx.font = '24px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.24)';
+  ctx.textAlign = 'center';
+  ctx.fillText('Gerado pelo FiadoApp · Os valores são baseados nos registros do sistema.', W / 2, y);
+}
+
+// ── update ────────────────────────────────────────────────────────────────────
+function update() {
+  const n      = parseInt(document.getElementById('numVendas').value);
+  const status = document.getElementById('filtroStatus').value;
+  document.getElementById('numVendasVal').textContent = n;
+
+  // Filtra e limita
+  let pool = status === 'todos'
+    ? vendaPool
+    : vendaPool.filter(v => v.status === status);
+
+  // Garante que há dados suficientes (repete se necessário)
+  while (pool.length < n) pool = [...pool, ...pool];
+  const vendas = pool.slice(0, n);
+
+  drawReport(vendas, status);
+}
+
+if (logoImg.complete && logoImg.naturalWidth > 0) update();
+else update(); // ainda sem logo, desenha assim mesmo
+
+function baixarImagem() {
+  const cv   = document.getElementById('report');
+  const n    = document.getElementById('numVendas').value;
+  const link = document.createElement('a');
+  link.download = `relatorio_${n}vendas.png`;
+  link.href = cv.toDataURL('image/png');
+  link.click();
+}
+</script>
+</body>
+</html>

@@ -13,17 +13,39 @@
  * @param {string} [opts.btnClasse]    - Classe CSS do botão confirmar (success|primary|danger)
  * @returns {Promise<boolean|number|null>} - true (confirm), number (input), null (cancelou)
  */
-function abrirModal({ titulo, mensagem, inputLabel, inputPlaceholder, btnConfirmar = 'Confirmar', btnClasse = 'success' }) {
+/**
+ * abrirModal — abre modal flutuante customizado.
+ *
+ * Parâmetros extras (opcionais):
+ *   selectLabel  string           — label do <select> de formato
+ *   selectOpcoes [{value, label}] — opções do <select>
+ *   selectDefault string          — valor pré-selecionado (default: primeiro item)
+ *
+ * Retorno quando selectOpcoes NÃO fornecido:
+ *   true (confirm) | number (input) | null (cancelou)
+ *
+ * Retorno quando selectOpcoes fornecido:
+ *   { formato: string, valor: number|null } | null (cancelou)
+ */
+function abrirModal({ titulo, mensagem, inputLabel, inputPlaceholder,
+                      btnConfirmar = 'Confirmar', btnClasse = 'success',
+                      selectLabel, selectOpcoes, selectDefault }) {
     return new Promise((resolve) => {
 
-        // Remove modal anterior, se existir
         document.getElementById('appModal')?.remove();
 
-        const temInput = !!inputLabel;
+        const temInput  = !!inputLabel;
+        const temSelect = Array.isArray(selectOpcoes) && selectOpcoes.length > 0;
 
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
         overlay.id = 'appModal';
+
+        const opcoesHTML = temSelect
+            ? selectOpcoes.map(o =>
+                `<option value="${o.value}"${o.value === selectDefault ? ' selected' : ''}>${o.label}</option>`
+              ).join('')
+            : '';
 
         overlay.innerHTML = `
             <div class="modal-card" role="dialog" aria-modal="true">
@@ -41,6 +63,12 @@ function abrirModal({ titulo, mensagem, inputLabel, inputPlaceholder, btnConfirm
                         inputmode="decimal"
                     >
                 ` : ''}
+                ${temSelect ? `
+                    <label class="modal-input-label" style="margin-top:${temInput ? '12px' : '4px'};">${selectLabel || 'Formato'}</label>
+                    <select id="modalSelectFormato" class="modal-select">
+                        ${opcoesHTML}
+                    </select>
+                ` : ''}
                 <div class="modal-actions">
                     <button id="modalBtnConfirmar" class="btn-${btnClasse}">${btnConfirmar}</button>
                     <button id="modalBtnCancelar"  class="btn-secondary">Cancelar</button>
@@ -50,20 +78,19 @@ function abrirModal({ titulo, mensagem, inputLabel, inputPlaceholder, btnConfirm
 
         document.body.appendChild(overlay);
 
-        // Focus automático
         if (temInput) {
             setTimeout(() => document.getElementById('modalInputValor')?.focus(), 60);
         } else {
             setTimeout(() => document.getElementById('modalBtnConfirmar')?.focus(), 60);
         }
 
-        function fechar(valor) {
-            overlay.remove();
-            resolve(valor);
-        }
+        function fechar(valor) { overlay.remove(); resolve(valor); }
 
-        // Confirmar
         document.getElementById('modalBtnConfirmar').onclick = () => {
+            const formato = temSelect
+                ? document.getElementById('modalSelectFormato').value
+                : null;
+
             if (temInput) {
                 const inputEl = document.getElementById('modalInputValor');
                 const val = parseFloat(inputEl.value);
@@ -73,27 +100,19 @@ function abrirModal({ titulo, mensagem, inputLabel, inputPlaceholder, btnConfirm
                     setTimeout(() => inputEl.classList.remove('modal-input-error'), 400);
                     return;
                 }
-                fechar(val);
+                // Com select: retorna objeto; sem select: retorna float (compat.)
+                fechar(temSelect ? { valor: val, formato } : val);
             } else {
-                fechar(true);
+                // Com select: retorna objeto; sem select: retorna true (compat.)
+                fechar(temSelect ? { formato } : true);
             }
         };
 
-        // Cancelar
         document.getElementById('modalBtnCancelar').onclick = () => fechar(null);
-
-        // Clique fora fecha
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) fechar(null);
-        });
-
-        // Teclado: Enter confirma (sem input), Esc cancela
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) fechar(null); });
         overlay.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') fechar(null);
-            if (e.key === 'Enter' && !temInput) {
-                e.preventDefault();
-                fechar(true);
-            }
+            if (e.key === 'Enter' && !temInput) { e.preventDefault(); fechar(temSelect ? { formato: document.getElementById('modalSelectFormato').value } : true); }
         });
     });
 }
@@ -117,6 +136,12 @@ function baixarPDF(url) {
 // ===============================
 // FUNÇÃO PADRÃO DE PROCESSAMENTO
 // ===============================
+// Opções de formato de comprovante (reutilizadas nas 3 funções de quitar)
+const FORMATO_OPCOES = [
+    { value: 'pdf',    label: '📄 PDF' },
+    { value: 'imagem', label: '🖼️ Imagem (PNG)' },
+];
+
 async function processarQuitacao(dados, mensagemSucesso) {
     try {
         const response = await fetch('/api/quitar_cliente.php', {
@@ -129,7 +154,12 @@ async function processarQuitacao(dados, mensagemSucesso) {
 
         if (result.status === 'sucesso') {
             showToast(mensagemSucesso);
-            if (result.pdf) baixarPDF(result.pdf);
+            const formato = dados.formato || 'pdf';
+            if (formato === 'imagem' && result.dados && typeof gerarComprovanteImagem === 'function') {
+                gerarComprovanteImagem(result.dados);
+            } else if (result.pdf) {
+                baixarPDF(result.pdf);
+            }
             setTimeout(() => location.reload(), 2000);
         } else {
             showToast(result.mensagem || 'Erro na operação.', 'error');
@@ -146,17 +176,20 @@ async function processarQuitacao(dados, mensagemSucesso) {
 // ===============================
 async function quitarTodas(cliente_id) {
 
-    const confirmado = await abrirModal({
+    const resultado = await abrirModal({
         titulo:        'Quitar Todas as Vendas',
         mensagem:      'Todas as vendas ativas deste cliente serão marcadas como pagas. Esta ação não pode ser desfeita.',
         btnConfirmar:  '✓ Confirmar Quitação',
-        btnClasse:     'success'
+        btnClasse:     'success',
+        selectLabel:   'Formato do comprovante',
+        selectOpcoes:  FORMATO_OPCOES,
+        selectDefault: 'pdf',
     });
 
-    if (!confirmado) return;
+    if (!resultado) return;
 
     processarQuitacao(
-        { cliente_id, tipo: 'todas' },
+        { cliente_id, tipo: 'todas', formato: resultado.formato },
         'Todas as vendas foram quitadas com sucesso!'
     );
 }
@@ -177,17 +210,20 @@ async function quitarSelecionadas(cliente_id) {
 
     const plural = selecionadas.length > 1;
 
-    const confirmado = await abrirModal({
+    const resultado = await abrirModal({
         titulo:       `Quitar ${selecionadas.length} Venda${plural ? 's' : ''} Selecionada${plural ? 's' : ''}`,
         mensagem:     `${plural ? 'As' : 'A'} ${selecionadas.length} venda${plural ? 's' : ''} selecionada${plural ? 's' : ''} ser${plural ? 'ão' : 'á'} marcada${plural ? 's' : ''} como paga${plural ? 's' : ''}.`,
         btnConfirmar: '✓ Confirmar',
-        btnClasse:    'success'
+        btnClasse:    'success',
+        selectLabel:  'Formato do comprovante',
+        selectOpcoes: FORMATO_OPCOES,
+        selectDefault:'pdf',
     });
 
-    if (!confirmado) return;
+    if (!resultado) return;
 
     processarQuitacao(
-        { cliente_id, tipo: 'selecionadas', vendas: selecionadas },
+        { cliente_id, tipo: 'selecionadas', vendas: selecionadas, formato: resultado.formato },
         `${selecionadas.length} venda${plural ? 's' : ''} quitada${plural ? 's' : ''} com sucesso!`
     );
 }
@@ -197,19 +233,22 @@ async function quitarSelecionadas(cliente_id) {
 // ===============================
 async function abrirQuitacaoParcial(cliente_id) {
 
-    const valor = await abrirModal({
+    const resultado = await abrirModal({
         titulo:            'Quitar Valor Específico',
         mensagem:          'Informe o valor a ser quitado. O valor será abatido das vendas mais antigas até ser totalmente descontado.',
         inputLabel:        'Valor a quitar (R$)',
         inputPlaceholder:  'Ex: 50.00',
         btnConfirmar:      '✓ Confirmar',
-        btnClasse:         'success'
+        btnClasse:         'success',
+        selectLabel:       'Formato do comprovante',
+        selectOpcoes:      FORMATO_OPCOES,
+        selectDefault:     'pdf',
     });
 
-    if (!valor) return;
+    if (!resultado) return;
 
     processarQuitacao(
-        { cliente_id, tipo: 'parcial', valor },
+        { cliente_id, tipo: 'parcial', valor: resultado.valor, formato: resultado.formato },
         'Quitação parcial realizada com sucesso!'
     );
 }

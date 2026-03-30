@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
     flatpickr('#data_fim',    fpOpts);
 });
 
+// ── Dados carregados (para exportação em imagem) ──────────────────────────
+let _dadosRelatorio = [];
+
 // ── Seleção de vendas ─────────────────────────────────────────────────────
 const selectedIds = new Set();
 
@@ -83,6 +86,7 @@ async function buscarRelatorio() {
     });
 
     const dados = await response.json();
+    _dadosRelatorio = dados; // salva para exportação em imagem
     container.innerHTML = '';
 
     if (dados.length === 0) {
@@ -157,4 +161,34 @@ function exportarPDF() {
         else if (v !== undefined && v !== '') params.append(k, v);
     });
     baixarPDF('/api/gerar_relatorio.php?' + params.toString());
+}
+
+function exportarImagem() {
+    if (!_dadosRelatorio || _dadosRelatorio.length === 0) {
+        showToast('Faça uma busca primeiro.', 'error');
+        return;
+    }
+
+    // Filtra pelas selecionadas (ou usa todas se nenhuma selecionada)
+    const ids   = obterIds();
+    const vendas = ids.length > 0
+        ? _dadosRelatorio.filter(v => ids.includes(v.id))
+        : _dadosRelatorio;
+
+    const filtros = obterFiltros();
+    const meta = {
+        emitidoPor:   '',  // preenchido pelo servidor; não disponível no JS
+        filtroStatus: filtros.status || '',
+        periodo:      filtros.data_inicio && filtros.data_fim
+            ? `${filtros.data_inicio} a ${filtros.data_fim}`
+            : filtros.data_inicio || filtros.data_fim || '',
+        dataEmissao:  new Date().toLocaleDateString('pt-BR') + ' ' +
+                      new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    if (typeof gerarRelatorioImagem === 'function') {
+        gerarRelatorioImagem(vendas, meta);
+    } else {
+        showToast('Módulo de imagem não carregado.', 'error');
+    }
 }
