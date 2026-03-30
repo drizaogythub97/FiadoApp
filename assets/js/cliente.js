@@ -77,6 +77,8 @@ function abrirModal({ titulo, mensagem, inputLabel, inputPlaceholder,
         `;
 
         document.body.appendChild(overlay);
+        // Precisa de .active para aparecer (display:none por padrão no CSS)
+        requestAnimationFrame(() => overlay.classList.add('active'));
 
         if (temInput) {
             setTimeout(() => document.getElementById('modalInputValor')?.focus(), 60);
