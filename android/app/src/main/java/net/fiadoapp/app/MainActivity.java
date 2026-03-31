@@ -11,9 +11,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -140,6 +142,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // ── Interface nativa para imagens geradas por Canvas (blob URL não é HTTP) ──
+        webView.addJavascriptInterface(new FiadoAppInterface(), "FiadoAppNativo");
+
         // ── Download interceptado → busca o arquivo e abre o compartilhar ──
         webView.setDownloadListener((downloadUrl, userAgent, contentDisposition, mimeType, contentLength) -> {
             String filename = extractFilename(contentDisposition, downloadUrl, mimeType);
@@ -169,6 +174,48 @@ public class MainActivity extends AppCompatActivity {
                 webView.loadUrl(APP_URL);
             }
         });
+    }
+
+    // ── Interface JavaScript → Java para imagens geradas via Canvas ────────────
+    // O JS chama FiadoAppNativo.downloadPng(dataUrl, filename) com o base64 do canvas.
+    // Isso contorna a limitação do DownloadListener com blob: URLs.
+    public class FiadoAppInterface {
+
+        @JavascriptInterface
+        public void downloadPng(String dataUrl, String filename) {
+            // dataUrl = "data:image/png;base64,XXXXX..."
+            try {
+                String base64 = dataUrl.contains(",") ? dataUrl.split(",")[1] : dataUrl;
+                byte[] bytes  = Base64.decode(base64, Base64.DEFAULT);
+
+                File dir = new File(getCacheDir(), "downloads");
+                if (!dir.exists()) dir.mkdirs();
+
+                // Garante extensão .png
+                String fname = (filename != null && !filename.isEmpty()) ? filename : "imagem_fiadoapp.png";
+                if (!fname.toLowerCase().endsWith(".png")) fname += ".png";
+
+                File outFile = new File(dir, fname);
+                try (FileOutputStream fos = new FileOutputStream(outFile)) {
+                    fos.write(bytes);
+                }
+
+                Uri fileUri = FileProvider.getUriForFile(MainActivity.this, AUTHORITY, outFile);
+                final String finalFname = fname;
+
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    Intent share = new Intent(Intent.ACTION_SEND);
+                    share.setType("image/png");
+                    share.putExtra(Intent.EXTRA_STREAM, fileUri);
+                    share.putExtra(Intent.EXTRA_SUBJECT, finalFname);
+                    share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    startActivity(Intent.createChooser(share, "Salvar / Compartilhar imagem"));
+                });
+
+            } catch (Exception e) {
+                showErrorOnUI("Erro ao salvar imagem.");
+            }
+        }
     }
 
     // ── Faz o download do arquivo em background e abre o share sheet ──

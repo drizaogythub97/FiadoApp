@@ -315,8 +315,20 @@
     img.src = '/assets/img/logo.png';
   }
 
-  // ── Download compatível com mobile e iOS ────────────────────────────────────
+  // ── Download compatível com WebView Android, iOS e browser desktop ──────────
   function baixar(canvas, filename) {
+    // Android WebView: usa interface nativa (blob URL não funciona via DownloadListener)
+    if (window.FiadoAppNativo && typeof window.FiadoAppNativo.downloadPng === 'function') {
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        window.FiadoAppNativo.downloadPng(dataUrl, filename);
+      } catch (e) {
+        if (typeof showToast === 'function') showToast('Erro ao gerar imagem.', 'error');
+      }
+      return;
+    }
+
+    // Browser / iOS Safari
     canvas.toBlob(function (blob) {
       if (!blob) {
         if (typeof showToast === 'function') showToast('Erro ao gerar imagem.', 'error');
