@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/config/security_headers.php'; ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>

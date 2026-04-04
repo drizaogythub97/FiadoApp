@@ -1,8 +1,11 @@
 <?php
 
-// Previne cache de páginas autenticadas no WebView e nos browsers.
+// Cache: previne armazenamento de páginas autenticadas
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
+
+// Demais headers de segurança (CSP, HSTS, X-Frame-Options, etc.)
+require_once __DIR__ . '/security_headers.php';
 
 require_once __DIR__ . '/session.php';
 

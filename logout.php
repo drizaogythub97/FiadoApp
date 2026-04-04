@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config/security_headers.php';
 require_once __DIR__ . '/config/session.php';
 
 // 1. Limpa todos os dados da sessão em memória
