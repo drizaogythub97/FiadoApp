@@ -84,6 +84,11 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <div class="stacked-actions">
+        <button class="btn-primary"
+                style="background:#3b82f6; border-color:#2563eb;"
+                onclick="gerarRelatorioVenda(<?= $venda['id'] ?>)">
+            📊 Gerar Relatório de Venda
+        </button>
         <?php if ($venda['status'] === 'ATIVA'): ?>
             <button class="btn-success" onclick="marcarComoPaga(<?= $venda['id'] ?>)">✓ Marcar como Paga</button>
         <?php else: ?>
@@ -100,7 +105,48 @@ require_once __DIR__ . '/includes/header.php';
 <?php
 $footerScripts = <<<'SCRIPT'
 <script src="/assets/js/cliente.js"></script>
+<script src="/assets/js/relatorio_imagem.js"></script>
 <script>
+async function gerarRelatorioVenda(vendaId) {
+    const resultado = await abrirModal({
+        titulo:        '📊 Gerar Relatório de Venda',
+        mensagem:      'Escolha o formato para exportar o relatório desta venda.',
+        btnConfirmar:  '📥 Gerar Relatório',
+        btnClasse:     'primary',
+        selectLabel:   'Formato',
+        selectOpcoes:  FORMATO_OPCOES,
+        selectDefault: 'pdf',
+    });
+    if (!resultado) return;
+
+    if (resultado.formato === 'pdf') {
+        showToast('Gerando relatório PDF...');
+        baixarPDF('/api/gerar_relatorio.php?tipo=pdf&ids[]=' + vendaId);
+    } else {
+        showToast('Gerando relatório em imagem...');
+        try {
+            const response = await fetch('/api/gerar_relatorio.php', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ ids: [vendaId] })
+            });
+            const vendas = await response.json();
+            if (!vendas.length) { showToast('Venda não encontrada.', 'error'); return; }
+            const meta = {
+                emitidoPor:   '',
+                filtroStatus: '',
+                periodo:      '',
+                dataEmissao:  new Date().toLocaleDateString('pt-BR') + ' ' +
+                              new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            };
+            if (typeof gerarRelatorioImagem === 'function') gerarRelatorioImagem(vendas, meta);
+            else showToast('Módulo de imagem não carregado.', 'error');
+        } catch (e) {
+            showToast('Erro ao gerar relatório.', 'error');
+        }
+    }
+}
+
 async function marcarComoPaga(id) {
     const confirmado = await abrirModal({
         titulo:       'Marcar Venda como Paga',

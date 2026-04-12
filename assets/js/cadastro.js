@@ -86,6 +86,82 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
+// ── FORMATAÇÃO DE MOEDA BRL ───────────────────────────────────────────────
+/**
+ * Aplica máscara de moeda BRL ao input.
+ * Trata toda entrada como centavos: "1234" → "R$ 12,34"
+ */
+function aplicarMascaraMoeda(input) {
+    input.addEventListener('input', function () {
+        const digits = this.value.replace(/\D/g, '');
+        if (!digits) { this.value = ''; return; }
+        const num = parseInt(digits, 10);
+        this.value = 'R$ ' + (num / 100).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+        });
+    });
+    // Seleciona tudo ao focar para facilitar edição
+    input.addEventListener('focus', function () {
+        setTimeout(() => this.select(), 0);
+    });
+}
+
+/**
+ * Extrai valor numérico de string formatada em BRL.
+ * "R$ 1.234,56" → 1234.56
+ */
+function parseMoedaBRL(str) {
+    if (!str) return 0;
+    return parseFloat(
+        str.replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.')
+    ) || 0;
+}
+
+// ── AUTOCOMPLETE DE DESCRIÇÃO DE PRODUTO ─────────────────────────────────
+function setupDescricaoAutocomplete(input) {
+    const field = input.closest('.produto-field');
+    if (!field) return;
+    field.style.position = 'relative';
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'autocomplete-dropdown';
+    field.appendChild(dropdown);
+
+    let debounce;
+    input.addEventListener('input', function () {
+        clearTimeout(debounce);
+        const termo = this.value.trim();
+        if (termo.length < 1) { dropdown.innerHTML = ''; dropdown.style.display = 'none'; return; }
+
+        debounce = setTimeout(async () => {
+            try {
+                const response = await fetch('/api/sugestoes_descricao.php?q=' + encodeURIComponent(termo));
+                const sugestoes = await response.json();
+                dropdown.innerHTML = '';
+                if (!sugestoes.length) { dropdown.style.display = 'none'; return; }
+                sugestoes.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.textContent = s;
+                    item.addEventListener('mousedown', function (e) {
+                        e.preventDefault(); // evita blur antes do click
+                        input.value = s;
+                        dropdown.style.display = 'none';
+                    });
+                    dropdown.appendChild(item);
+                });
+                dropdown.style.display = 'block';
+            } catch (_) {
+                dropdown.style.display = 'none';
+            }
+        }, 220);
+    });
+
+    input.addEventListener('blur', function () {
+        setTimeout(() => { dropdown.style.display = 'none'; }, 180);
+    });
+}
+
 // ── PRODUTOS DINÂMICOS ────────────────────────────────────────────────────
 function adicionarProduto() {
     const container = document.getElementById("produtos");
@@ -101,11 +177,11 @@ function adicionarProduto() {
             </div>
             <div class="produto-field">
                 <label class="produto-label">Descrição</label>
-                <input type="text" placeholder="Ex: Ração 15kg" class="descricao">
+                <input type="text" placeholder="Ex: Ração 15kg" class="descricao" autocomplete="off">
             </div>
             <div class="produto-field">
                 <label class="produto-label">Valor Unit.</label>
-                <input type="number" step="0.01" placeholder="0.00" class="valorUnitario">
+                <input type="text" inputmode="decimal" placeholder="R$ 0,00" class="valorUnitario" autocomplete="off">
             </div>
         </div>
     `;
@@ -114,14 +190,23 @@ function adicionarProduto() {
         wrapper.remove();
         calcularTotal();
     };
+
+    // Aplica máscara de moeda ao campo de valor
+    const valorInput = wrapper.querySelector(".valorUnitario");
+    aplicarMascaraMoeda(valorInput);
+
+    // Aplica autocomplete de descrição
+    const descricaoInput = wrapper.querySelector(".descricao");
+    setupDescricaoAutocomplete(descricaoInput);
+
     container.appendChild(wrapper);
 }
 
 function calcularTotal() {
     let total = 0;
     document.querySelectorAll(".produto-card").forEach(prod => {
-        const qtd   = parseFloat(prod.querySelector(".quantidade").value)    || 0;
-        const valor = parseFloat(prod.querySelector(".valorUnitario").value) || 0;
+        const qtd   = parseFloat(prod.querySelector(".quantidade").value) || 0;
+        const valor = parseMoedaBRL(prod.querySelector(".valorUnitario").value);
         total += qtd * valor;
     });
     document.getElementById("totalGeral").innerText = total.toLocaleString('pt-BR', {
@@ -155,7 +240,10 @@ async function salvarVenda() {
         data_compra:     document.getElementById("data_compra").value,
         data_vencimento: document.getElementById("data_vencimento").value,
         observacao:      document.getElementById("observacao")?.value?.trim() || '',
-        itens:           produtos
+        itens:           produtos.map(p => ({
+            ...p,
+            valor_unitario: parseMoedaBRL(p.valor_unitario)
+        }))
     };
 
     try {

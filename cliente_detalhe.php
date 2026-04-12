@@ -108,6 +108,12 @@ require_once __DIR__ . '/includes/header.php';
         <span class="total-aberto-valor">R$ <?= number_format($total_geral, 2, ',', '.') ?></span>
     </div>
 
+    <button type="button" class="btn-primary btn-full"
+            style="background:#3b82f6; border-color:#2563eb; margin-bottom:10px;"
+            onclick="gerarRelatorioVendasAtivas(<?= $cliente_id ?>)">
+        📊 Gerar Relatório de Vendas Ativas
+    </button>
+
     <div class="action-grid">
         <button type="button" class="btn-success" onclick="quitarTodas(<?= $cliente_id ?>)">
             ✓ Quitar Todas
@@ -157,7 +163,48 @@ require_once __DIR__ . '/includes/header.php';
 <?php
 $footerScripts = <<<'SCRIPT'
 <script src="/assets/js/cliente.js"></script>
+<script src="/assets/js/relatorio_imagem.js"></script>
 <script>
+async function gerarRelatorioVendasAtivas(clienteId) {
+    const resultado = await abrirModal({
+        titulo:        '📊 Gerar Relatório de Vendas Ativas',
+        mensagem:      'Escolha o formato do relatório de vendas ativas deste cliente.',
+        btnConfirmar:  '📥 Gerar Relatório',
+        btnClasse:     'primary',
+        selectLabel:   'Formato',
+        selectOpcoes:  FORMATO_OPCOES,
+        selectDefault: 'pdf',
+    });
+    if (!resultado) return;
+
+    if (resultado.formato === 'pdf') {
+        showToast('Gerando relatório PDF...');
+        baixarPDF('/api/gerar_relatorio.php?tipo=pdf&status=ATIVA&cliente_id=' + clienteId);
+    } else {
+        showToast('Gerando relatório em imagem...');
+        try {
+            const response = await fetch('/api/gerar_relatorio.php', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ cliente_id: clienteId, status: 'ATIVA' })
+            });
+            const vendas = await response.json();
+            if (!vendas.length) { showToast('Nenhuma venda ativa encontrada.', 'error'); return; }
+            const meta = {
+                emitidoPor:   '',
+                filtroStatus: 'ATIVA',
+                periodo:      '',
+                dataEmissao:  new Date().toLocaleDateString('pt-BR') + ' ' +
+                              new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            };
+            if (typeof gerarRelatorioImagem === 'function') gerarRelatorioImagem(vendas, meta);
+            else showToast('Módulo de imagem não carregado.', 'error');
+        } catch (e) {
+            showToast('Erro ao gerar relatório.', 'error');
+        }
+    }
+}
+
 function abrirWhatsApp(e, el) {
     e.preventDefault();
     window.location.href = el.href;

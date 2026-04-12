@@ -46,6 +46,13 @@ require_once __DIR__ . '/includes/header.php';
             <input type="text" id="inicial" maxlength="1" placeholder="A–Z">
         </div>
 
+        <div class="form-group autocomplete-group" style="position:relative;">
+            <label>Buscar Cliente Específico</label>
+            <input type="text" id="clienteRelBusca" placeholder="Digite nome do cliente" autocomplete="off">
+            <input type="hidden" id="clienteRelId">
+            <div id="clienteRelDropdown" class="autocomplete-dropdown"></div>
+        </div>
+
     </div>
 
     <button class="btn-primary" onclick="buscarRelatorio()" style="width:100%; justify-content:center;">

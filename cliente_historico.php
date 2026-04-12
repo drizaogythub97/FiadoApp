@@ -55,11 +55,17 @@ require_once __DIR__ . '/includes/header.php';
 </main>
 
 <?php
-$clienteIdJS = (int)$cliente_id;
+$clienteIdJS  = (int)$cliente_id;
+$nomeClienteJS = addslashes($nomeCliente);
 $footerScripts = <<<SCRIPT
 <script src="/assets/js/cliente.js"></script>
+<script src="/assets/js/comprovante_imagem.js"></script>
 <script>
-const clienteId = {$clienteIdJS};
+const clienteId    = {$clienteIdJS};
+const nomeCliente  = '{$nomeClienteJS}';
+
+// Mapa de vendas carregadas (para gerar comprovante em imagem sem nova requisição)
+const _vendasHistorico = {};
 
 function formatarData(dataISO) {
     if (!dataISO) return '—';
@@ -82,6 +88,9 @@ async function carregarHistorico() {
     }
 
     vendas.forEach(venda => {
+        // Armazena para uso no comprovante em imagem
+        _vendasHistorico[venda.id] = venda;
+
         let itensHTML = '';
         venda.itens.forEach(item => {
             itensHTML += '<div class="historico-item"><div class="historico-item-info"><span>' +
@@ -105,8 +114,51 @@ async function carregarHistorico() {
 carregarHistorico();
 
 async function gerarComprovanteHistorico(vendaId) {
-    showToast('Gerando comprovante...');
-    await baixarPDF('/api/gerar_pdf.php?id=' + vendaId);
+    const resultado = await abrirModal({
+        titulo:        '📄 Gerar Comprovante',
+        mensagem:      'Escolha o formato do comprovante de quitação.',
+        btnConfirmar:  '📥 Gerar',
+        btnClasse:     'success',
+        selectLabel:   'Formato',
+        selectOpcoes:  FORMATO_OPCOES,
+        selectDefault: 'pdf',
+    });
+    if (!resultado) return;
+
+    if (resultado.formato === 'pdf') {
+        showToast('Gerando comprovante...');
+        baixarPDF('/api/gerar_pdf.php?id=' + vendaId);
+    } else {
+        showToast('Gerando comprovante em imagem...');
+        const venda = _vendasHistorico[vendaId];
+        if (!venda) { showToast('Dados da venda não encontrados.', 'error'); return; }
+
+        const itensTexto = (venda.itens || [])
+            .map(i => i.quantidade + 'x ' + i.descricao)
+            .join(', ') || '—';
+
+        const dados = {
+            emitidoPor:    '',
+            cliente:       nomeCliente,
+            referencia:    '',
+            telefone:      '',
+            dataEmissao:   new Date().toLocaleDateString('pt-BR') + ' ' +
+                           new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            titulo:        'Quitação',
+            vendas:        [{
+                id:    venda.id,
+                data:  formatarData(venda.quitado_em || venda.data_compra),
+                itens: itensTexto,
+                valor: venda.valor_total,
+            }],
+            totalQuitado:  parseFloat(venda.valor_total),
+            saldoRestante: 0,
+            nota:          'Comprovante de quitação gerado pelo FiadoApp.',
+        };
+
+        if (typeof gerarComprovanteImagem === 'function') gerarComprovanteImagem(dados);
+        else showToast('Módulo de imagem não carregado.', 'error');
+    }
 }
 </script>
 SCRIPT;

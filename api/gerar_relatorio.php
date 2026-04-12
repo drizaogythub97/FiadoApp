@@ -21,6 +21,7 @@ $data_inicio = $input['data_inicio'] ?? null;
 $data_fim    = $input['data_fim']    ?? null;
 $status      = $input['status']      ?? null;
 $inicial     = $input['inicial']     ?? null;
+$cliente_id  = isset($input['cliente_id']) ? (int)$input['cliente_id'] : null;
 $ids         = $input['ids']         ?? ($_GET['ids'] ?? []);
 if (!is_array($ids)) $ids = [];
 $ids = array_filter(array_map('intval', $ids));
@@ -35,10 +36,11 @@ $sql = "
 ";
 $params = [':usuario_id' => $usuario_id];
 
-if ($data_inicio) { $sql .= " AND v.data_compra >= :data_inicio"; $params[':data_inicio'] = $data_inicio; }
-if ($data_fim)    { $sql .= " AND v.data_compra <= :data_fim";    $params[':data_fim']    = $data_fim; }
-if ($status)      { $sql .= " AND v.status = :status";            $params[':status']      = $status; }
-if ($inicial)     { $sql .= " AND c.nome LIKE :inicial";           $params[':inicial']     = strtoupper($inicial) . '%'; }
+if ($data_inicio)  { $sql .= " AND v.data_compra >= :data_inicio"; $params[':data_inicio'] = $data_inicio; }
+if ($data_fim)     { $sql .= " AND v.data_compra <= :data_fim";    $params[':data_fim']    = $data_fim; }
+if ($status)       { $sql .= " AND v.status = :status";            $params[':status']      = $status; }
+if ($inicial)      { $sql .= " AND c.nome LIKE :inicial";           $params[':inicial']     = strtoupper($inicial) . '%'; }
+if ($cliente_id)   { $sql .= " AND v.cliente_id = :cliente_id";   $params[':cliente_id']  = $cliente_id; }
 if (!empty($ids)) {
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
     $sql .= " AND v.id IN ($placeholders)";

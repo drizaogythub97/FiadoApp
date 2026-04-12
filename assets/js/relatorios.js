@@ -9,6 +9,53 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     flatpickr('#data_inicio', fpOpts);
     flatpickr('#data_fim',    fpOpts);
+
+    // ── Autocomplete de cliente na tela de relatórios ─────────────────────
+    const clienteBusca   = document.getElementById('clienteRelBusca');
+    const clienteIdInput = document.getElementById('clienteRelId');
+    const dropdown       = document.getElementById('clienteRelDropdown');
+
+    if (clienteBusca) {
+        let debounce;
+        clienteBusca.addEventListener('input', function () {
+            clearTimeout(debounce);
+            clienteIdInput.value = '';
+            const termo = this.value.trim();
+            if (termo.length < 2) { dropdown.innerHTML = ''; dropdown.style.display = 'none'; return; }
+
+            debounce = setTimeout(async () => {
+                try {
+                    const res      = await fetch('/api/buscar_clientes.php?q=' + encodeURIComponent(termo));
+                    const clientes = await res.json();
+                    dropdown.innerHTML = '';
+                    if (!clientes.length) { dropdown.style.display = 'none'; return; }
+                    clientes.forEach(c => {
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        item.textContent = `${c.nome}${c.sobrenome ? ' ' + c.sobrenome : ''}${c.referencia ? ' (' + c.referencia + ')' : ''}`;
+                        item.addEventListener('click', () => {
+                            clienteIdInput.value   = c.id;
+                            clienteBusca.value     = c.nome + (c.sobrenome ? ' ' + c.sobrenome : '');
+                            dropdown.style.display = 'none';
+                        });
+                        dropdown.appendChild(item);
+                    });
+                    dropdown.style.display = 'block';
+                } catch (_) {
+                    dropdown.style.display = 'none';
+                }
+            }, 220);
+        });
+
+        // Limpa seleção se o campo for apagado
+        clienteBusca.addEventListener('change', function () {
+            if (!this.value.trim()) clienteIdInput.value = '';
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.autocomplete-group')) dropdown.style.display = 'none';
+        });
+    }
 });
 
 // ── Dados carregados (para exportação em imagem) ──────────────────────────
@@ -131,11 +178,13 @@ async function buscarRelatorio() {
 
 // ── Exportação ────────────────────────────────────────────────────────────
 function obterFiltros() {
+    const clienteId = document.getElementById('clienteRelId')?.value || '';
     return {
         data_inicio: document.getElementById('data_inicio').value,
         data_fim:    document.getElementById('data_fim').value,
         status:      document.getElementById('status').value,
-        inicial:     document.getElementById('inicial').value
+        inicial:     document.getElementById('inicial').value,
+        ...(clienteId ? { cliente_id: parseInt(clienteId, 10) } : {}),
     };
 }
 
