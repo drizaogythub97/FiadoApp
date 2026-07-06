@@ -7,9 +7,10 @@ require_once __DIR__ . '/pdf_helper.php';
 date_default_timezone_set('America/Sao_Paulo');
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$usuario_id = $_SESSION['usuario_id'];
 if ($id <= 0) die("ID invalido.");
 
-// ── Dados da venda ──
+// ── Dados da venda (somente do usuário logado) ──
 $stmt = $pdo->prepare("
     SELECT v.id, v.data_compra, v.data_vencimento, v.valor_total, v.status,
            p.data_pagamento, p.valor_pago,
@@ -20,10 +21,10 @@ $stmt = $pdo->prepare("
     JOIN clientes   c ON v.cliente_id = c.id
     JOIN pagamentos p ON p.venda_id   = v.id
     JOIN usuarios   u ON v.usuario_id = u.id
-    WHERE v.id = ?
+    WHERE v.id = ? AND v.usuario_id = ?
     ORDER BY p.data_pagamento DESC LIMIT 1
 ");
-$stmt->execute([$id]);
+$stmt->execute([$id, $usuario_id]);
 $v = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$v) die("Venda nao encontrada.");
 

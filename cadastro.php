@@ -15,7 +15,7 @@ if ($preClienteId > 0) {
 }
 
 $extraHead = <<<'HTML'
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="/assets/vendor/flatpickr.min.css">
 HTML;
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -116,8 +116,8 @@ require_once __DIR__ . '/includes/header.php';
 // Passa dados do cliente pré-selecionado para o JS
 $preClienteJS = $preCliente ? 'window.PRE_CLIENTE = ' . json_encode($preCliente) . ';' : '';
 $footerScripts = <<<SCRIPT
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+<script src="/assets/vendor/flatpickr.min.js"></script>
+<script src="/assets/vendor/flatpickr-pt.js"></script>
 <script src="/assets/js/telefone.js"></script>
 <script>$preClienteJS</script>
 <script src="/assets/js/cadastro.js"></script>

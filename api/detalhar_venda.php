@@ -5,6 +5,7 @@ require_once __DIR__ . '/../config/conexao.php';
 header('Content-Type: application/json');
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+$usuario_id = $_SESSION['usuario_id'];
 
 if ($id <= 0) {
     echo json_encode(["status" => "erro", "mensagem" => "ID inválido"]);
@@ -13,9 +14,9 @@ if ($id <= 0) {
 
 try {
 
-    // Buscar dados da venda
+    // Buscar dados da venda (somente do usuário logado)
     $stmt = $pdo->prepare("
-        SELECT 
+        SELECT
             v.id,
             v.data_compra,
             v.data_vencimento,
@@ -26,9 +27,9 @@ try {
             c.telefone
         FROM vendas v
         JOIN clientes c ON v.cliente_id = c.id
-        WHERE v.id = ?
+        WHERE v.id = ? AND v.usuario_id = ?
     ");
-    $stmt->execute([$id]);
+    $stmt->execute([$id, $usuario_id]);
     $venda = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$venda) {
@@ -56,8 +57,9 @@ try {
     ]);
 
 } catch (Exception $e) {
+    error_log('[FiadoApp] detalhar_venda: ' . $e->getMessage());
     echo json_encode([
         "status" => "erro",
-        "mensagem" => $e->getMessage()
+        "mensagem" => "Erro ao carregar a venda."
     ]);
 }

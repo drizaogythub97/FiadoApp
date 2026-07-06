@@ -193,6 +193,16 @@ try {
         "cliente_id" => (int)$cliente_id
     ]);
 
+} catch (PDOException $e) {
+
+    $pdo->rollBack();
+    error_log('[FiadoApp] salvar_venda: ' . $e->getMessage());
+
+    echo json_encode([
+        "status" => "erro",
+        "mensagem" => "Erro ao salvar a venda. Tente novamente."
+    ]);
+
 } catch (Exception $e) {
 
     $pdo->rollBack();

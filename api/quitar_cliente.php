@@ -108,8 +108,8 @@ try {
     $stmtUsr->execute([$usuario_id]);
     $usuarioNome = $stmtUsr->fetch(PDO::FETCH_ASSOC)['nome'] ?? '';
 
-    $stmtCli = $pdo->prepare("SELECT nome, sobrenome, referencia, telefone FROM clientes WHERE id = ?");
-    $stmtCli->execute([$vendasQuitadas[0]['cliente_id']]);
+    $stmtCli = $pdo->prepare("SELECT nome, sobrenome, referencia, telefone FROM clientes WHERE id = ? AND usuario_id = ?");
+    $stmtCli->execute([$vendasQuitadas[0]['cliente_id'], $usuario_id]);
     $clienteRow = $stmtCli->fetch(PDO::FETCH_ASSOC);
 
     $titulosMap = [
@@ -154,6 +154,10 @@ try {
 
     echo json_encode(["status" => "sucesso", "pdf" => $pdfPath, "dados" => $dadosImagem]);
 
+} catch (PDOException $e) {
+    $pdo->rollBack();
+    error_log('[FiadoApp] quitar_cliente: ' . $e->getMessage());
+    echo json_encode(["status"=>"erro","mensagem"=>"Erro ao processar a quitação."]);
 } catch (Exception $e) {
     $pdo->rollBack();
     echo json_encode(["status"=>"erro","mensagem"=>$e->getMessage()]);
@@ -180,8 +184,8 @@ function gerarPDF($pdo, $vendasQuitadas, $totalQuitado, $usuario_id, $saldoResta
     $stmt->execute([$usuario_id]);
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $stmt = $pdo->prepare("SELECT nome, sobrenome, referencia, telefone FROM clientes WHERE id=?");
-    $stmt->execute([$vendasQuitadas[0]['cliente_id']]);
+    $stmt = $pdo->prepare("SELECT nome, sobrenome, referencia, telefone FROM clientes WHERE id=? AND usuario_id=?");
+    $stmt->execute([$vendasQuitadas[0]['cliente_id'], $usuario_id]);
     $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
 
     $clienteNome = trim($cliente['nome'] . ' ' . ($cliente['sobrenome'] ?? ''));
@@ -239,7 +243,8 @@ function gerarPDF($pdo, $vendasQuitadas, $totalQuitado, $usuario_id, $saldoResta
     $uploadDir = __DIR__ . '/../uploads/';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
-    $fileName = 'comprovante_' . time() . '.pdf';
+    // Nome vinculado ao usuário + sufixo aleatório (evita adivinhação de URL)
+    $fileName = 'comprovante_' . $usuario_id . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.pdf';
     $pdf->Output('F', $uploadDir . $fileName);
 
     return '/api/download_pdf.php?file=' . $fileName;

@@ -1,10 +1,18 @@
 <?php
 require_once __DIR__ . '/config/security_headers.php';
 require_once __DIR__ . '/config/conexao.php';
+require_once __DIR__ . '/config/rate_limit.php';
 
 $mensagem = "";
 
-if($_SERVER['REQUEST_METHOD'] === 'POST'){
+// Rate limit: máx 5 cadastros/tentativas por IP por hora
+$rl = rl_status('cadastro', 5, 3600);
+if ($rl['bloqueado']) {
+    $minutos  = ceil($rl['segundos_restantes'] / 60);
+    $mensagem = "Muitas tentativas. Aguarde {$minutos} minuto(s) para tentar novamente.";
+}
+
+if($_SERVER['REQUEST_METHOD'] === 'POST' && !$rl['bloqueado']){
 
     $tipo = $_POST['tipo'] ?? '';
     $nome = trim($_POST['nome'] ?? '');
@@ -15,9 +23,19 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
     if(!$tipo || !$nome || !$email || !$senha){
         $mensagem = "Preencha todos os campos.";
+    } elseif (!in_array($tipo, ['PF', 'PJ'], true)) {
+        $mensagem = "Tipo de cadastro inválido.";
+    } elseif (mb_strlen($nome) > 100) {
+        $mensagem = "O nome deve ter no máximo 100 caracteres.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $mensagem = "Informe um e-mail válido.";
+    } elseif (strlen($senha) < 8) {
+        $mensagem = "A senha deve ter pelo menos 8 caracteres.";
     } elseif (!$lgpd) {
         $mensagem = "Você precisa aceitar a Política de Privacidade para criar uma conta.";
     } else {
+
+        rl_register('cadastro', 3600);
 
         $hash = password_hash($senha, PASSWORD_DEFAULT);
 
@@ -33,8 +51,13 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             header("Location: index.php");
             exit;
 
-        } catch(Exception $e){
-            $mensagem = "Email já cadastrado.";
+        } catch(PDOException $e){
+            if ($e->getCode() === '23000') {
+                $mensagem = "Email já cadastrado.";
+            } else {
+                error_log('[FiadoApp] cadastro_usuario: ' . $e->getMessage());
+                $mensagem = "Erro ao criar a conta. Tente novamente.";
+            }
         }
     }
 }
@@ -84,7 +107,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
             <div class="form-group">
                 <label>Senha</label>
-                <input type="password" name="senha" placeholder="Crie uma senha" required>
+                <input type="password" name="senha" placeholder="Crie uma senha (mín. 8 caracteres)" minlength="8" required>
             </div>
 
             <div class="form-group" style="margin-bottom:6px;">
@@ -99,7 +122,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             </div>
 
             <div class="stacked-actions">
-                <button type="submit" class="btn-primary">Criar Conta</button>
+                <button type="submit" class="btn-primary" <?= $rl['bloqueado'] ? 'disabled' : '' ?>>Criar Conta</button>
                 <a href="index.php" class="btn-secondary">← Voltar ao Login</a>
             </div>
 
