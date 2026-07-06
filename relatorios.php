@@ -1,6 +1,6 @@
 <?php
 $pageTitle = 'Relatórios - FiadoApp';
-$extraHead = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">';
+$extraHead = '<link rel="stylesheet" href="/assets/vendor/flatpickr.min.css">';
 require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -91,8 +91,8 @@ require_once __DIR__ . '/includes/header.php';
 
 <?php
 $footerScripts = <<<'SCRIPT'
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+<script src="/assets/vendor/flatpickr.min.js"></script>
+<script src="/assets/vendor/flatpickr-pt.js"></script>
 <script src="/assets/js/cliente.js"></script>
 <script src="/assets/js/relatorio_imagem.js"></script>
 <script src="/assets/js/relatorios.js"></script>

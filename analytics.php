@@ -1,6 +1,6 @@
 <?php
 $pageTitle = 'Analytics - FiadoApp';
-$extraHead = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css?v=1">';
+$extraHead = '<link rel="stylesheet" href="/assets/vendor/flatpickr.min.css?v=1">';
 require_once __DIR__ . '/config/auth.php';
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -97,9 +97,9 @@ require_once __DIR__ . '/includes/header.php';
 
 <?php
 $footerScripts = <<<'SCRIPT'
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/assets/vendor/flatpickr.min.js"></script>
+<script src="/assets/vendor/flatpickr-pt.js"></script>
+<script src="/assets/vendor/chart.umd.min.js"></script>
 <script>
 // ── Config Flatpickr ────────────────────────────────────────────────────────
 const fpOpts = {
